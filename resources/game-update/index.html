@@ -8,1337 +8,1022 @@
 <meta http-equiv="Content-Security-Policy" content="img-src * data:;">
 <style>
 :root {
---bg: #faf7f4;
---sm: #e89b9b;
---sl: #f5c4c4;
---mj: #a8d8c8;
---cy: #fbe8c3;
---lv: #c8b8d8;
---bd: #4a4458;
---tp: #3d3648;
---ts: #6b6378;
---tm: #9a92a5;
---ss: 0 4px 20px rgba(74,68,88,.08);
---sd: 0 14px 44px rgba(74,68,88,.18);
---ft: 'PingFang SC','Hiragino Sans GB','Noto Sans SC','Microsoft YaHei',sans-serif;
---tb: cubic-bezier(.34,1.56,.64,1);
+  --bg: #faf7f4;
+  --sm: #e89b9b;
+  --sl: #f5c4c4;
+  --mj: #a8d8c8;
+  --cy: #fbe8c3;
+  --lv: #c8b8d8;
+  --bd: #4a4458;
+  --tp: #3d3648;
+  --ts: #6b6378;
+  --tm: #9a92a5;
+  --ss: 0 4px 20px rgba(74,68,88,.08);
+  --sd: 0 14px 44px rgba(74,68,88,.18);
+  --ft: 'PingFang SC','Hiragino Sans GB','Noto Sans SC','Microsoft YaHei',sans-serif;
+  --tb: cubic-bezier(.34,1.56,.64,1);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-font-family: var(--ft);
-background: var(--bg);
-background-image: radial-gradient(ellipse at 15% 20%, rgba(232,155,155,.06) 0%, transparent 55%),
-radial-gradient(ellipse at 78% 65%, rgba(168,216,200,.07) 0%, transparent 55%),
-radial-gradient(ellipse at 40% 80%, rgba(200,184,216,.05) 0%, transparent 50%),
-radial-gradient(circle at 60% 30%, rgba(251,232,195,.06) 0%, transparent 45%);
-background-attachment: fixed;
-color: var(--tp);
-min-height: 100vh;
-line-height: 1.6;
--webkit-font-smoothing: antialiased;
+  font-family: var(--ft);
+  background: var(--bg);
+  background-image: radial-gradient(ellipse at 15% 20%, rgba(232,155,155,.06) 0%, transparent 55%),
+                    radial-gradient(ellipse at 78% 65%, rgba(168,216,200,.07) 0%, transparent 55%),
+                    radial-gradient(ellipse at 40% 80%, rgba(200,184,216,.05) 0%, transparent 50%),
+                    radial-gradient(circle at 60% 30%, rgba(251,232,195,.06) 0%, transparent 45%);
+  background-attachment: fixed;
+  color: var(--tp);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
-.page-container {
-max-width: 820px;
-margin: 0 auto;
-padding: 28px 22px 60px;
-}
+.page-container { max-width: 820px; margin: 0 auto; padding: 28px 22px 60px; }
 .page-header {
-display: flex;
-align-items: center;
-gap: 14px;
-margin-bottom: 30px;
-padding: 12px 20px;
-background: #fffdfb;
-border-radius: 10px;
-box-shadow: var(--ss);
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 30px; padding: 12px 20px;
+  background: #fffdfb; border-radius: 10px; box-shadow: var(--ss);
 }
 .back-area {
-display: flex;
-align-items: center;
-gap: 8px;
-padding-right: 14px;
-border-right: 1.5px solid #e8e2dc;
-flex-shrink: 0;
-cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  padding-right: 14px; border-right: 1.5px solid #e8e2dc;
+  flex-shrink: 0; cursor: pointer;
 }
-.back-area svg {
-width: 20px;
-height: 20px;
-color: var(--tp);
-}
-.back-area:hover svg {
-color: var(--sm);
-}
-.page-title-wrap {
-flex: 1;
-display: flex;
-align-items: center;
-gap: 10px;
-}
-.page-title {
-font-size: 1.35rem;
-font-weight: 700;
-white-space: nowrap;
-color: var(--tp);
-}
-.page-title-right {
-display: flex;
-align-items: center;
-gap: 8px;
-margin-left: auto;
-}
-.author-info {
-display: flex;
-flex-direction: column;
-line-height: 1.3;
-}
-.author-line {
-font-size: 0.75rem;
-color: var(--tm);
-}
+.back-area svg { width: 20px; height: 20px; color: var(--tp); }
+.back-area:hover svg { color: var(--sm); }
+.page-title-wrap { flex: 1; display: flex; align-items: center; gap: 10px; }
+.page-title { font-size: 1.35rem; font-weight: 700; white-space: nowrap; color: var(--tp); }
+.page-title-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.author-info { display: flex; flex-direction: column; line-height: 1.3; }
+.author-line { font-size: 0.75rem; color: var(--tm); }
 .bili-link {
-display: inline-flex;
-align-items: center;
-width: 24px;
-height: 24px;
-color: var(--ts);
-transition: color 0.2s;
+  display: inline-flex; align-items: center;
+  width: 24px; height: 24px; color: var(--ts); transition: color 0.2s;
 }
-.bili-link:hover {
-color: #fb7299;
-}
-.bili-link svg {
-width: 100%;
-height: 100%;
-}
-.latest-section {
-margin-bottom: 28px;
-}
+.bili-link:hover { color: #fb7299; }
+.bili-link svg { width: 100%; height: 100%; }
+.latest-section { margin-bottom: 28px; }
+
+/* ===== 最新版本卡片 ===== */
 .latest-card {
-background: #fffdfb;
-border-radius: 10px;
-padding: 24px;
-box-shadow: var(--ss);
-display: flex;
-gap: 20px;
-align-items: flex-start;
-transition: all 0.35s var(--tb);
-position: relative;
-overflow: hidden;
+  background: #fffdfb; border-radius: 10px; padding: 24px;
+  box-shadow: var(--ss); display: flex; gap: 20px; align-items: flex-start;
+  transition: transform 0.35s var(--tb), box-shadow 0.35s var(--tb), opacity 0.35s ease;
+  position: relative; overflow: hidden;
 }
-.latest-card:hover {
-transform: translateY(-4px);
-box-shadow: var(--sd);
-}
+.latest-card:hover { transform: translateY(-4px); box-shadow: var(--sd); }
 .latest-card::after {
-content: '';
-position: absolute;
-top: -20px;
-right: -20px;
-width: 80px;
-height: 80px;
-background: rgba(232,155,155,0.08);
-border-radius: 50%;
-pointer-events: none;
+  content: ''; position: absolute; top: -20px; right: -20px;
+  width: 80px; height: 80px; background: rgba(232,155,155,0.08);
+  border-radius: 50%; pointer-events: none;
 }
 .latest-icon {
-width: 64px;
-height: 64px;
-border-radius: 14px;
-object-fit: cover;
-flex-shrink: 0;
-border: 1.5px solid #e8e2dc;
-background: #f5f2f8;
+  width: 64px; height: 64px; border-radius: 14px; object-fit: cover;
+  flex-shrink: 0; border: 1.5px solid #e8e2dc; background: #f5f2f8;
 }
-.latest-info {
-flex: 1;
-min-width: 0;
-}
+.latest-info { flex: 1; min-width: 0; }
+
+/* 版本号行：强制不换行 */
 .latest-version {
-font-size: 1.3rem;
-font-weight: 700;
-margin-bottom: 6px;
-color: var(--tp);
+  font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; color: var(--tp);
+  white-space: nowrap;
 }
 .latest-suffix {
-font-size: 0.76rem;
-color: var(--tm);
-font-weight: 600;
-letter-spacing: 0.05em;
+  font-size: 0.76rem; color: var(--tm); font-weight: 600; letter-spacing: 0.05em;
 }
+
+/* 提示行：强制不换行 */
 .latest-hint {
-font-size: 0.72rem;
-color: var(--sm);
-font-weight: 500;
-margin-bottom: 10px;
+  font-size: 0.72rem; color: var(--sm); font-weight: 500; margin-bottom: 10px;
+  white-space: nowrap;
 }
-.desc-wrap {
-display: flex;
-align-items: baseline;
-gap: 6px;
-margin-bottom: 16px;
-}
+
+.desc-wrap { display: flex; align-items: baseline; gap: 6px; margin-bottom: 16px; }
 .desc-text {
-flex: 1;
-min-width: 0;
-font-size: 0.88rem;
-color: var(--ts);
-line-height: 1.65;
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
+  flex: 1; min-width: 0; font-size: 0.88rem; color: var(--ts);
+  line-height: 1.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.desc-text.expanded {
-white-space: normal;
-overflow: visible;
-}
+.desc-text.expanded { white-space: normal; overflow: visible; }
 .desc-toggle {
-flex-shrink: 0;
-color: var(--sm);
-font-weight: 600;
-cursor: pointer;
-font-size: 0.85rem;
-white-space: nowrap;
+  flex-shrink: 0; color: var(--sm); font-weight: 600; cursor: pointer;
+  font-size: 0.85rem; white-space: nowrap;
 }
-.desc-toggle:hover {
-color: #c97a7a;
-text-decoration: underline;
-}
-.latest-actions {
-display: flex;
-gap: 10px;
-flex-wrap: wrap;
-}
+.desc-toggle:hover { color: #c97a7a; text-decoration: underline; }
+.latest-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn-dl {
-display: inline-flex;
-align-items: center;
-gap: 6px;
-padding: 10px 24px;
-background: var(--sm);
-color: #fff;
-border: 1.5px solid #c97a7a;
-border-radius: 8px;
-font-weight: 700;
-font-size: 0.9rem;
-cursor: pointer;
-text-decoration: none;
-transition: all 0.3s var(--tb);
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px;
+  background: var(--sm); color: #fff; border: 1.5px solid #c97a7a;
+  border-radius: 8px; font-weight: 700; font-size: 0.9rem;
+  cursor: pointer; text-decoration: none; transition: all 0.3s var(--tb);
 }
-.btn-dl:hover {
-background: #fff;
-color: var(--sm);
-transform: scale(1.05);
-}
+.btn-dl:hover { background: #fff; color: var(--sm); transform: scale(1.05); }
 .btn-tutorial {
-display: inline-flex;
-align-items: center;
-gap: 6px;
-padding: 10px 24px;
-background: #fffdfb;
-color: var(--tp);
-border: 1.5px solid var(--bd);
-border-radius: 8px;
-font-weight: 700;
-font-size: 0.9rem;
-cursor: pointer;
-text-decoration: none;
-transition: all 0.3s var(--tb);
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px;
+  background: #fffdfb; color: var(--tp); border: 1.5px solid var(--bd);
+  border-radius: 8px; font-weight: 700; font-size: 0.9rem;
+  cursor: pointer; text-decoration: none; transition: all 0.3s var(--tb);
 }
 .btn-tutorial:hover {
-background: var(--mj);
-color: #3d6b4f;
-border-color: #8cc8a0;
-transform: scale(1.05);
+  background: var(--mj); color: #3d6b4f; border-color: #8cc8a0; transform: scale(1.05);
 }
-.search-section {
-margin-bottom: 26px;
-position: relative;
-z-index: 50;
+
+/* ===== 骨架屏加载动画 ===== */
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
-.search-container {
-position: relative;
+.skeleton-shimmer-icon {
+  background: linear-gradient(90deg, #f0ece4 25%, #e8e2dc 50%, #f0ece4 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.6s ease-in-out infinite;
+  border-radius: 14px;
+  border: 1.5px solid #ece7df;
 }
+.skeleton-line {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0ece4 25%, #e8e2dc 50%, #f0ece4 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.6s ease-in-out infinite;
+}
+.skeleton-btn {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f0ece4 25%, #e8e2dc 50%, #f0ece4 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.6s ease-in-out infinite;
+}
+.latest-card.skeleton { pointer-events: none; }
+.latest-card.skeleton::after { display: none; }
+.latest-card.skeleton .latest-icon { display: none; }
+
+/* 卡片内容淡入 */
+@keyframes latestCardFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.latest-card.content-ready {
+  animation: latestCardFadeIn 0.4s ease both;
+}
+
+/* ===== 以下为原页面样式，未改动 ===== */
+.search-section { margin-bottom: 26px; position: relative; z-index: 50; }
+.search-container { position: relative; }
 .search-input {
-width: 100%;
-padding: 10px 40px 10px 16px;
-font-size: 0.9rem;
-border: 1.5px solid #e8e2dc;
-border-radius: 8px;
-background: var(--bg);
-color: var(--tp);
-outline: none;
-transition: all 0.3s;
+  width: 100%; padding: 10px 40px 10px 16px; font-size: 0.9rem;
+  border: 1.5px solid #e8e2dc; border-radius: 8px;
+  background: var(--bg); color: var(--tp); outline: none; transition: all 0.3s;
 }
-.search-input:focus {
-border-color: var(--sm);
-background: #fff;
-}
-.search-input::placeholder {
-color: var(--tm);
-}
+.search-input:focus { border-color: var(--sm); background: #fff; }
+.search-input::placeholder { color: var(--tm); }
 .search-mascot {
-position: absolute;
-right: 12px;
-top: 50%;
-transform: translateY(-50%);
-width: 18px;
-height: 18px;
-pointer-events: none;
-opacity: 0.45;
-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a4458' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
-background-size: contain;
-background-repeat: no-repeat;
-transition: opacity 0.2s;
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 18px; pointer-events: none; opacity: 0.45;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a4458' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-size: contain; background-repeat: no-repeat; transition: opacity 0.2s;
 }
-.search-input:focus ~ .search-mascot {
-opacity: 0.7;
-}
+.search-input:focus ~ .search-mascot { opacity: 0.7; }
 .search-dropdown {
-position: absolute;
-top: calc(100% + 6px);
-left: 0;
-right: 0;
-background: #fff;
-border: 1.5px solid #e8e2dc;
-border-radius: 8px;
-z-index: 200;
-max-height: 260px;
-overflow-y: auto;
-opacity: 0;
-visibility: hidden;
-transform: translateY(-6px);
-transition: all 0.2s;
-list-style: none;
-padding: 4px 0;
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #fff; border: 1.5px solid #e8e2dc; border-radius: 8px;
+  z-index: 200; max-height: 260px; overflow-y: auto;
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: all 0.2s; list-style: none; padding: 4px 0;
 }
-.search-dropdown.active {
-opacity: 1;
-visibility: visible;
-transform: translateY(0);
-}
+.search-dropdown.active { opacity: 1; visibility: visible; transform: translateY(0); }
 .search-dropdown-item {
-padding: 10px 16px;
-cursor: pointer;
-font-size: 0.9rem;
-color: var(--tp);
-display: flex;
-align-items: center;
-gap: 10px;
-transition: background 0.15s;
+  padding: 10px 16px; cursor: pointer; font-size: 0.9rem; color: var(--tp);
+  display: flex; align-items: center; gap: 10px; transition: background 0.15s;
 }
-.search-dropdown-item:hover {
-background: #fef0f0;
-color: #c97a7a;
-}
+.search-dropdown-item:hover { background: #fef0f0; color: #c97a7a; }
 .search-dropdown-item mark {
-background: #fef0f0;
-color: #c97a7a;
-font-weight: 600;
-padding: 0 2px;
-border-radius: 3px;
+  background: #fef0f0; color: #c97a7a; font-weight: 600;
+  padding: 0 2px; border-radius: 3px;
 }
 .search-dropdown-empty {
-padding: 18px 20px;
-text-align: center;
-color: var(--tm);
-font-size: 0.88rem;
+  padding: 18px 20px; text-align: center; color: var(--tm); font-size: 0.88rem;
 }
 .search-item-type {
-font-size: 0.7rem;
-padding: 2px 8px;
-border-radius: 10px;
-font-weight: 600;
-flex-shrink: 0;
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
+  font-weight: 600; flex-shrink: 0;
 }
-.search-item-type.launcher {
-background: #fef0f0;
-color: #c97a7a;
-}
-.search-item-type.game {
-background: #e8f5e8;
-color: #3d6b4f;
-}
-.history-section {
-margin-bottom: 20px;
-}
+.search-item-type.launcher { background: #fef0f0; color: #c97a7a; }
+.search-item-type.game { background: #e8f5e8; color: #3d6b4f; }
+.history-section { margin-bottom: 20px; }
 .history-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-margin-bottom: 18px;
-gap: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; gap: 12px;
 }
 .history-title {
-font-size: 1.25rem;
-font-weight: 700;
-padding-left: 14px;
-border-left: 5px solid var(--sm);
-white-space: nowrap;
-flex-shrink: 0;
-color: var(--tp);
+  font-size: 1.25rem; font-weight: 700; padding-left: 14px;
+  border-left: 5px solid var(--sm); white-space: nowrap; flex-shrink: 0; color: var(--tp);
 }
 .history-title::after {
-content: '';
-position: relative;
-display: block;
-bottom: -4px;
-left: 0;
-width: 30px;
-height: 3px;
-background: var(--mj);
-border-radius: 2px;
+  content: ''; position: relative; display: block;
+  bottom: -4px; left: 0; width: 30px; height: 3px;
+  background: var(--mj); border-radius: 2px;
 }
 .tab-group {
-display: inline-flex;
-border: 1.5px solid #e8e2dc;
-border-radius: 8px;
-overflow: hidden;
-background: #fffdfb;
-flex-shrink: 0;
+  display: inline-flex; border: 1.5px solid #e8e2dc; border-radius: 8px;
+  overflow: hidden; background: #fffdfb; flex-shrink: 0;
 }
 .tab-btn {
-padding: 9px 22px;
-border: none;
-border-radius: 0;
-background: transparent;
-font-weight: 600;
-font-size: 0.85rem;
-color: var(--ts);
-cursor: pointer;
-transition: all 0.25s;
-font-family: var(--ft);
-white-space: nowrap;
+  padding: 9px 22px; border: none; border-radius: 0;
+  background: transparent; font-weight: 600; font-size: 0.85rem;
+  color: var(--ts); cursor: pointer; transition: all 0.25s;
+  font-family: var(--ft); white-space: nowrap;
 }
-.tab-btn + .tab-btn {
-border-left: 1.5px solid #e8e2dc;
-}
-.tab-btn.active {
-background: var(--sm);
-color: #fff;
-}
-.tab-btn:hover:not(.active) {
-background: #fef0f0;
-}
+.tab-btn + .tab-btn { border-left: 1.5px solid #e8e2dc; }
+.tab-btn.active { background: var(--sm); color: #fff; }
+.tab-btn:hover:not(.active) { background: #fef0f0; }
 .version-list {
-display: flex;
-flex-direction: column;
-gap: 14px;
-margin-bottom: 30px;
+  display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px;
 }
 .version-card {
-background: #fffdfb;
-border-radius: 10px;
-overflow: hidden;
-box-shadow: var(--ss);
-transition: all 0.35s var(--tb);
-cursor: default;
+  background: #fffdfb; border-radius: 10px; overflow: hidden;
+  box-shadow: var(--ss); transition: all 0.35s var(--tb); cursor: default;
 }
-.version-card:hover {
-transform: translateY(-3px);
-box-shadow: var(--sd);
-}
+.version-card:hover { transform: translateY(-3px); box-shadow: var(--sd); }
 .version-card-inner {
-padding: 18px 20px;
-display: flex;
-align-items: center;
-gap: 16px;
+  padding: 18px 20px; display: flex; align-items: center; gap: 16px;
 }
-.version-info {
-flex: 1;
-min-width: 0;
-}
-.version-name {
-font-weight: 700;
-font-size: 1.02rem;
-margin-bottom: 4px;
-color: var(--tp);
-}
-.vdesc-wrap {
-display: flex;
-align-items: baseline;
-gap: 6px;
-margin-bottom: 8px;
-}
+.version-info { flex: 1; min-width: 0; }
+.version-name { font-weight: 700; font-size: 1.02rem; margin-bottom: 4px; color: var(--tp); }
+.vdesc-wrap { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
 .vdesc-text {
-flex: 1;
-min-width: 0;
-font-size: 0.84rem;
-color: var(--ts);
-line-height: 1.55;
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
+  flex: 1; min-width: 0; font-size: 0.84rem; color: var(--ts);
+  line-height: 1.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.vdesc-text.expanded {
-white-space: normal;
-overflow: visible;
-}
+.vdesc-text.expanded { white-space: normal; overflow: visible; }
 .vdesc-toggle {
-flex-shrink: 0;
-color: var(--sm);
-font-weight: 600;
-cursor: pointer;
-font-size: 0.82rem;
-white-space: nowrap;
+  flex-shrink: 0; color: var(--sm); font-weight: 600; cursor: pointer;
+  font-size: 0.82rem; white-space: nowrap;
 }
-.vdesc-toggle:hover {
-color: #c97a7a;
-text-decoration: underline;
-}
-.version-meta {
-display: flex;
-gap: 8px;
-flex-wrap: wrap;
-}
+.vdesc-toggle:hover { color: #c97a7a; text-decoration: underline; }
+.version-meta { display: flex; gap: 8px; flex-wrap: wrap; }
 .version-meta-tag {
-padding: 3px 10px;
-background: #f5f2f8;
-border: 1.5px solid #ddd8e5;
-border-radius: 5px;
-font-size: 0.74rem;
-color: var(--ts);
-font-weight: 500;
+  padding: 3px 10px; background: #f5f2f8; border: 1.5px solid #ddd8e5;
+  border-radius: 5px; font-size: 0.74rem; color: var(--ts); font-weight: 500;
 }
 .version-dl-btn {
-display: inline-flex;
-align-items: center;
-padding: 9px 20px;
-background: var(--sm);
-color: #fff;
-border: 1.5px solid #c97a7a;
-border-radius: 8px;
-font-weight: 700;
-font-size: 0.85rem;
-cursor: pointer;
-text-decoration: none;
-transition: all 0.3s var(--tb);
-white-space: nowrap;
-flex-shrink: 0;
+  display: inline-flex; align-items: center; padding: 9px 20px;
+  background: var(--sm); color: #fff; border: 1.5px solid #c97a7a;
+  border-radius: 8px; font-weight: 700; font-size: 0.85rem;
+  cursor: pointer; text-decoration: none; transition: all 0.3s var(--tb);
+  white-space: nowrap; flex-shrink: 0;
 }
-.version-dl-btn:hover {
-background: #fff;
-color: var(--sm);
-transform: scale(1.05);
-}
+.version-dl-btn:hover { background: #fff; color: var(--sm); transform: scale(1.05); }
 .empty-state {
-text-align: center;
-padding: 50px 20px;
-color: var(--tm);
-font-size: 0.92rem;
+  text-align: center; padding: 50px 20px; color: var(--tm); font-size: 0.92rem;
 }
 .pagination {
-display: flex;
-justify-content: center;
-align-items: center;
-gap: 8px;
-margin: 30px 0 40px;
-flex-wrap: nowrap;
-overflow: hidden;
+  display: flex; justify-content: center; align-items: center; gap: 8px;
+  margin: 30px 0 40px; flex-wrap: nowrap; overflow: hidden;
 }
 .pagination-btn, .pagination-page {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-min-width: 36px;
-height: 36px;
-padding: 0 10px;
-background: #fffdfb;
-border: 2px solid var(--bd);
-border-radius: 10px;
-font-family: var(--ft);
-font-size: 0.85rem;
-font-weight: 600;
-color: var(--tp);
-cursor: pointer;
-transition: all 0.3s var(--tb);
-box-shadow: var(--ss);
-user-select: none;
-flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; height: 36px; padding: 0 10px;
+  background: #fffdfb; border: 2px solid var(--bd);
+  border-radius: 10px; font-family: var(--ft); font-size: 0.85rem;
+  font-weight: 600; color: var(--tp); cursor: pointer;
+  transition: all 0.3s var(--tb); box-shadow: var(--ss); user-select: none;
+  flex-shrink: 0;
 }
 .pagination-btn:hover:not(:disabled), .pagination-page:hover:not(.active) {
-background: var(--sl);
-color: #fff;
-border-color: #c97a7a;
-transform: scale(1.07);
+  background: var(--sl); color: #fff; border-color: #c97a7a; transform: scale(1.07);
 }
-.pagination-btn:disabled {
-opacity: 0.3;
-cursor: not-allowed;
-pointer-events: none;
-}
+.pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
 .pagination-page.active {
-background: var(--sm);
-color: #fff;
-border-color: #c97a7a;
-box-shadow: 0 2px 12px rgba(232,155,155,0.3);
+  background: var(--sm); color: #fff; border-color: #c97a7a;
+  box-shadow: 0 2px 12px rgba(232,155,155,0.3);
 }
 .pagination-dots {
-color: var(--tm);
-font-weight: 600;
-padding: 0 4px;
-user-select: none;
-flex-shrink: 0;
+  color: var(--tm); font-weight: 600; padding: 0 4px;
+  user-select: none; flex-shrink: 0;
 }
 .pagination-goto {
-display: inline-flex;
-align-items: center;
-gap: 6px;
-margin-left: 8px;
-flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-left: 8px; flex-shrink: 0;
 }
 .pagination-goto-input {
-width: 48px;
-height: 36px;
-padding: 0 8px;
-background: #fffdfb;
-border: 2px solid var(--bd);
-border-radius: 10px;
-font-family: var(--ft);
-font-size: 0.85rem;
-font-weight: 600;
-color: var(--tp);
-text-align: center;
-outline: none;
-box-shadow: var(--ss);
-transition: all 0.3s var(--tb);
--moz-appearance: textfield;
+  width: 48px; height: 36px; padding: 0 8px; background: #fffdfb;
+  border: 2px solid var(--bd); border-radius: 10px;
+  font-family: var(--ft); font-size: 0.85rem; font-weight: 600;
+  color: var(--tp); text-align: center; outline: none;
+  box-shadow: var(--ss); transition: all 0.3s var(--tb); -moz-appearance: textfield;
 }
 .pagination-goto-input::-webkit-outer-spin-button,
-.pagination-goto-input::-webkit-inner-spin-button {
--webkit-appearance: none;
-margin: 0;
-}
-.pagination-goto-input:focus {
-border-color: var(--sm);
-box-shadow: var(--sd);
-}
+.pagination-goto-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.pagination-goto-input:focus { border-color: var(--sm); box-shadow: var(--sd); }
 .pagination-goto-btn {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-min-width: 36px;
-height: 36px;
-padding: 0 10px;
-background: #fffdfb;
-border: 2px solid var(--bd);
-border-radius: 10px;
-font-family: var(--ft);
-font-size: 0.8rem;
-font-weight: 600;
-color: var(--tp);
-cursor: pointer;
-transition: all 0.3s var(--tb);
-box-shadow: var(--ss);
-user-select: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; height: 36px; padding: 0 10px; background: #fffdfb;
+  border: 2px solid var(--bd); border-radius: 10px;
+  font-family: var(--ft); font-size: 0.8rem; font-weight: 600;
+  color: var(--tp); cursor: pointer; transition: all 0.3s var(--tb);
+  box-shadow: var(--ss); user-select: none;
 }
 .pagination-goto-btn:hover {
-background: var(--sl);
-color: #fff;
-border-color: #c97a7a;
-transform: scale(1.07);
+  background: var(--sl); color: #fff; border-color: #c97a7a; transform: scale(1.07);
 }
-.pagination-goto-mobile-trigger {
-display: none;
-}
+.pagination-goto-mobile-trigger { display: none; }
 .toast {
-position: fixed;
-bottom: 28px;
-left: 50%;
-transform: translateX(-50%) translateY(120px);
-background: #fffefb;
-border: 1.5px solid #d5cdc0;
-border-radius: 12px;
-padding: 10px 22px;
-font-weight: 550;
-font-size: 0.88rem;
-color: var(--tp);
-box-shadow: var(--sd);
-transition: transform 0.35s cubic-bezier(0.34,1.4,0.64,1);
-z-index: 600;
-white-space: nowrap;
-pointer-events: none;
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  background: #fffefb; border: 1.5px solid #d5cdc0;
+  border-radius: 12px; padding: 10px 22px; font-weight: 550;
+  font-size: 0.88rem; color: var(--tp); box-shadow: var(--sd);
+  transition: transform 0.35s cubic-bezier(0.34,1.4,0.64,1);
+  z-index: 600; white-space: nowrap; pointer-events: none;
 }
-.toast.show {
-transform: translateX(-50%) translateY(0);
-}
+.toast.show { transform: translateX(-50%) translateY(0); }
 .goto-popup-overlay {
-display: none;
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,0.25);
-z-index: 700;
-align-items: flex-end;
-justify-content: center;
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.25); z-index: 700;
+  align-items: flex-end; justify-content: center;
 }
-.goto-popup-overlay.active {
-display: flex;
-}
+.goto-popup-overlay.active { display: flex; }
 .goto-popup {
-width: 100%;
-max-width: 360px;
-background: #fffdfb;
-border: 2.5px solid var(--bd);
-border-radius: 24px 24px 0 0;
-padding: 24px 20px 32px;
-box-shadow: var(--sd);
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 16px;
-animation: popupSlideUp 0.3s var(--tb);
+  width: 100%; max-width: 360px; background: #fffdfb;
+  border: 2.5px solid var(--bd); border-radius: 24px 24px 0 0;
+  padding: 24px 20px 32px; box-shadow: var(--sd);
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  animation: popupSlideUp 0.3s var(--tb);
 }
 @keyframes popupSlideUp {
-from { transform: translateY(100%); }
-to { transform: translateY(0); }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
-.goto-popup-title {
-font-size: 0.95rem;
-font-weight: 600;
-color: var(--tp);
-}
-.goto-popup-row {
-display: flex;
-align-items: center;
-gap: 10px;
-}
+.goto-popup-title { font-size: 0.95rem; font-weight: 600; color: var(--tp); }
+.goto-popup-row { display: flex; align-items: center; gap: 10px; }
 .goto-popup-input {
-width: 80px;
-height: 44px;
-padding: 0 14px;
-background: #fffdfb;
-border: 2.5px solid var(--bd);
-border-radius: 30px;
-font-family: var(--ft);
-font-size: 1rem;
-font-weight: 600;
-color: var(--tp);
-text-align: center;
-outline: none;
--moz-appearance: textfield;
+  width: 80px; height: 44px; padding: 0 14px; background: #fffdfb;
+  border: 2.5px solid var(--bd); border-radius: 30px;
+  font-family: var(--ft); font-size: 1rem; font-weight: 600;
+  color: var(--tp); text-align: center; outline: none; -moz-appearance: textfield;
 }
 .goto-popup-input::-webkit-outer-spin-button,
-.goto-popup-input::-webkit-inner-spin-button {
--webkit-appearance: none;
-margin: 0;
-}
-.goto-popup-input:focus {
-border-color: var(--sm);
-}
+.goto-popup-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.goto-popup-input:focus { border-color: var(--sm); }
 .goto-popup-confirm {
-height: 44px;
-padding: 0 24px;
-background: var(--sm);
-color: #fff;
-border: 2.5px solid #c97a7a;
-border-radius: 30px;
-font-family: var(--ft);
-font-size: 0.92rem;
-font-weight: 700;
-cursor: pointer;
-transition: all 0.3s var(--tb);
+  height: 44px; padding: 0 24px; background: var(--sm); color: #fff;
+  border: 2.5px solid #c97a7a; border-radius: 30px;
+  font-family: var(--ft); font-size: 0.92rem; font-weight: 700;
+  cursor: pointer; transition: all 0.3s var(--tb);
 }
-.goto-popup-confirm:hover {
-background: #fff;
-color: var(--sm);
-transform: scale(1.05);
-}
+.goto-popup-confirm:hover { background: #fff; color: var(--sm); transform: scale(1.05); }
 .footer {
-text-align: center;
-padding: 30px 0 20px;
-color: var(--tm);
-font-size: 0.9rem;
-border-top: 1px solid #e8e2dc;
-margin-top: 20px;
+  text-align: center; padding: 30px 0 20px; color: var(--tm);
+  font-size: 0.9rem; border-top: 1px solid #e8e2dc; margin-top: 20px;
 }
+
+/* ===== 移动端适配 ===== */
 @media (max-width: 600px) {
-.page-container {
-padding: 16px 14px 50px;
-}
-.page-header {
-gap: 10px;
-}
-.back-area {
-padding-right: 10px;
-}
-.page-title {
-font-size: 1.2rem;
-}
-.latest-card {
-padding: 18px;
-gap: 14px;
-}
-.latest-icon {
-width: 52px;
-height: 52px;
-border-radius: 14px;
-}
-.latest-version {
-font-size: 1.1rem;
-}
-.latest-actions {
-gap: 8px;
-}
-.btn-dl, .btn-tutorial {
-padding: 9px 18px;
-font-size: 0.84rem;
-}
-.history-header {
-gap: 10px;
-}
-.history-title {
-font-size: 1.1rem;
-}
-.tab-btn {
-padding: 8px 16px;
-font-size: 0.82rem;
-}
-.version-card-inner {
-padding: 14px 16px;
-flex-direction: column;
-align-items: stretch;
-gap: 10px;
-}
-.version-info {
-width: 100%;
-}
-.version-dl-btn {
-align-self: flex-end;
-}
-.pagination {
-gap: 6px;
-}
-.pagination-btn, .pagination-page {
-min-width: 34px;
-height: 34px;
-font-size: 0.82rem;
-padding: 0 8px;
-}
-.pagination-dots {
-font-size: 0.82rem;
-padding: 0 2px;
-}
-.pagination-goto-input, .pagination-goto-btn {
-display: none;
-}
-.pagination-goto-mobile-trigger {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-min-width: 34px;
-height: 34px;
-padding: 0 8px;
-background: #fffdfb;
-border: 2px solid var(--bd);
-border-radius: 10px;
-font-size: 0.82rem;
-font-weight: 600;
-color: var(--tp);
-cursor: pointer;
-box-shadow: var(--ss);
-transition: all 0.3s var(--tb);
-user-select: none;
-}
-.pagination-goto-mobile-trigger:hover {
-background: var(--sl);
-color: #fff;
-border-color: #c97a7a;
-}
-.pagination-goto {
-margin-left: 6px;
-}
+  .page-container { padding: 16px 14px 50px; }
+  .page-header { gap: 10px; }
+  .back-area { padding-right: 10px; }
+  .page-title { font-size: 1.2rem; }
+  .latest-card { padding: 18px; gap: 14px; }
+  .latest-icon { width: 52px; height: 52px; border-radius: 14px; }
+
+  /* 版本号行：缩小字号保证不换行 */
+  .latest-version { font-size: 0.95rem; }
+  .latest-suffix { font-size: 0.6rem; }
+  /* 提示行：缩小字号保证不换行 */
+  .latest-hint { font-size: 0.58rem; }
+
+  .latest-actions { gap: 8px; }
+  .btn-dl, .btn-tutorial { padding: 9px 18px; font-size: 0.84rem; }
+
+  /* 骨架屏图标移动端 */
+  .skeleton-shimmer-icon { width: 52px !important; height: 52px !important; }
+
+  .history-header { gap: 10px; }
+  .history-title { font-size: 1.1rem; }
+  .tab-btn { padding: 8px 16px; font-size: 0.82rem; }
+  .version-card-inner {
+    padding: 14px 16px; flex-direction: column; align-items: stretch; gap: 10px;
+  }
+  .version-info { width: 100%; }
+  .version-dl-btn { align-self: flex-end; }
+  .pagination { gap: 6px; }
+  .pagination-btn, .pagination-page {
+    min-width: 34px; height: 34px; font-size: 0.82rem; padding: 0 8px;
+  }
+  .pagination-dots { font-size: 0.82rem; padding: 0 2px; }
+  .pagination-goto-input, .pagination-goto-btn { display: none; }
+  .pagination-goto-mobile-trigger {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 34px; height: 34px; padding: 0 8px;
+    background: #fffdfb; border: 2px solid var(--bd);
+    border-radius: 10px; font-size: 0.82rem; font-weight: 600;
+    color: var(--tp); cursor: pointer; box-shadow: var(--ss);
+    transition: all 0.3s var(--tb); user-select: none;
+  }
+  .pagination-goto-mobile-trigger:hover {
+    background: var(--sl); color: #fff; border-color: #c97a7a;
+  }
+  .pagination-goto { margin-left: 6px; }
 }
 @media (min-width: 601px) {
-.goto-popup-overlay {
-display: none !important;
-}
+  .goto-popup-overlay { display: none !important; }
 }
 </style>
 </head>
 <body>
 <div class="page-container">
-<header class="page-header">
-<div class="back-area" onclick="window.location.href='../../index.html'">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-<path d="M19 12H5M12 19l-7-7 7-7"/>
-</svg>
+  <header class="page-header">
+    <div class="back-area" onclick="window.location.href='../../index.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </div>
+    <div class="page-title-wrap">
+      <h1 class="page-title">塔Ⅱ手机版</h1>
+      <div class="page-title-right">
+        <div class="author-info">
+          <span class="author-line">author ↴</span>
+          <span class="author-line">wsdx233</span>
+        </div>
+        <a class="bili-link" href="https://space.bilibili.com/116375500" target="_blank" rel="noopener noreferrer" title="B站主页">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 0 1-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 0 1 .16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section class="latest-section">
+    <div class="latest-card" id="latestCard"></div>
+  </section>
+
+  <section class="search-section">
+    <div class="search-container" id="searchContainer">
+      <input type="text" class="search-input" id="searchInput" placeholder="搜索版本号、描述内容..." autocomplete="off">
+      <span class="search-mascot"></span>
+      <ul class="search-dropdown" id="searchDropdown"></ul>
+    </div>
+  </section>
+
+  <section class="history-section">
+    <div class="history-header">
+      <h2 class="history-title">历史版本</h2>
+      <div class="tab-group">
+        <button class="tab-btn active" data-tab="launcher" id="tabLauncher">启动器</button>
+        <button class="tab-btn" data-tab="game" id="tabGame">本体包</button>
+      </div>
+    </div>
+    <div class="version-list" id="versionList"></div>
+    <div class="pagination" id="pagination"></div>
+  </section>
+
+  <footer class="footer">
+    <p>STS2娘化MOD站 © 2026 壹个屑猫猫</p>
+  </footer>
 </div>
-<div class="page-title-wrap">
-<h1 class="page-title">塔Ⅱ手机版</h1>
-<div class="page-title-right">
-<div class="author-info">
-<span class="author-line">author ↴</span>
-<span class="author-line">wsdx233</span>
-</div>
-<a class="bili-link" href="https://space.bilibili.com/116375500" target="_blank" rel="noopener noreferrer" title="B站主页">
-<svg viewBox="0 0 24 24" fill="currentColor">
-<path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 0 1-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 0 1 .16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z"/>
-</svg>
-</a>
-</div>
-</div>
-</header>
-<section class="latest-section">
-<div class="latest-card" id="latestCard"></div>
-</section>
-<section class="search-section">
-<div class="search-container" id="searchContainer">
-<input type="text" class="search-input" id="searchInput" placeholder="搜索版本号、描述内容..." autocomplete="off">
-<span class="search-mascot"></span>
-<ul class="search-dropdown" id="searchDropdown"></ul>
-</div>
-</section>
-<section class="history-section">
-<div class="history-header">
-<h2 class="history-title">历史版本</h2>
-<div class="tab-group">
-<button class="tab-btn active" data-tab="launcher" id="tabLauncher">启动器</button>
-<button class="tab-btn" data-tab="game" id="tabGame">本体包</button>
-</div>
-</div>
-<div class="version-list" id="versionList"></div>
-<div class="pagination" id="pagination"></div>
-</section>
-<footer class="footer">
-<p>STS2娘化MOD站 © 2026 壹个屑猫猫</p>
-</footer>
-</div>
+
 <div class="toast" id="toast"></div>
+
 <script>
 (function() {
-var LAUNCHER_ICON = 'http://shp.qpic.cn/collector/1976464052/97d2e4e6-a0ac-4104-99ec-13b66af8a785/0';
-var GAME_ICON = 'http://shp.qpic.cn/collector/1976464052/e2e5de8f-a1cd-40e2-aef5-e6acc9327b3b/0';
-var TUTORIAL_URL = 'https://pd.qq.com/s/vgb8c8gn';
-var launcherData = [
-{
-version: '0.1.0',
-date: '2026-06-07',
-size: '66.65MB',
-description: '修复联机大厅跨端联机连不上的BUG[2026-06-07]——这是加载(杀戮尖塔2)本体包的启动器，启动器与本体包须配套使用，缺一不可。目前推荐的游戏本体包版本为 v0.103.2 因为兼容性很不错（PS：你也可以同时装多个版本，启动器支持游戏本体包的多版本切换）',
-downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz4572e7b1dcbb438dbf1d2a1678cdce5a?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-isLatest: true
-}
-];
-var gameData = [
-{
-version: 'v0.103.2',
-date: '2026-06-05',
-size: '829.44MB',
-description: '首个大更新！重做进阶6（删卡变贵），数值锁上限并移除纪元遗物以强力限制无限流，Boss重做，新增徽章与恐惧症模式。',
-downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6b56a9c2329149028afac59056d22849?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-isLatest: false
-},
-{
-version: 'v0.103.3',
-date: '2026-06-05',
-size: '829.44MB',
-description: '纯修Bug补丁（v0.103.2的修复版）。重点修复游戏崩溃、手柄交互、多人联机及遗物软锁问题，无新机制，纯粹提升稳定性。',
-downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6ff2c90c0b7248249d818620ae68b451?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-isLatest: false
-},
-{
-version: 'v0.106.1',
-date: '2026-06-05',
-size: '862.12MB',
-description: '新Boss修复。专为v0.106.0新增Boss永劫沙漏修Bug，修复其Wither卡牌在金字塔下异常保留、误强化及意图显示错误。',
-downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgza86aaebac7d941cf8067bb86a0fd48be?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-isLatest: false
-},
-{
-version: 'v0.107.0',
-date: '2026-06-05',
-size: '865.39MB',
-description: '这个版本我还没玩过，啥时候更新的？所以...猫猫暂时还没有想好介绍哦...',
-downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz43be7b3709f540b5be6ba344a6212b33?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-isLatest: false
-}
-];
-var activeTab = 'launcher';
-var currentPage = 1;
-var ITEMS_PER_PAGE = 8;
-var currentFilteredData = null;
-var latestCard = document.getElementById('latestCard');
-var versionList = document.getElementById('versionList');
-var paginationEl = document.getElementById('pagination');
-var searchInput = document.getElementById('searchInput');
-var searchDropdown = document.getElementById('searchDropdown');
-var searchContainer = document.getElementById('searchContainer');
-var tabLauncher = document.getElementById('tabLauncher');
-var tabGame = document.getElementById('tabGame');
-var toastEl = document.getElementById('toast');
-var toastTimer;
-function showToast(msg) {
-clearTimeout(toastTimer);
-toastEl.textContent = msg;
-toastEl.classList.add('show');
-toastTimer = setTimeout(function() {
-toastEl.classList.remove('show');
-}, 2200);
-}
-function checkOverflow(textEl, toggleEl) {
-if (textEl.textContent.length > 40) {
-toggleEl.style.display = 'inline';
-return;
-}
-requestAnimationFrame(function() {
-requestAnimationFrame(function() {
-if (textEl.scrollWidth > textEl.clientWidth + 2) {
-toggleEl.style.display = 'inline';
-}
-});
-});
-}
-function renderLatestCard() {
-var latest = launcherData.find(function(d) { return d.isLatest; });
-if (!latest) {
-latestCard.style.display = 'none';
-return;
-}
-latestCard.style.display = 'flex';
-latestCard.innerHTML = '<img class="latest-icon" src="' + LAUNCHER_ICON + '" alt="启动器图标" onerror="this.style.display=\'none\'">' +
-'<div class="latest-info">' +
-'<div class="latest-version">' + latest.version + ' <span class="latest-suffix">/ 最新版本 / 启动器 / ' + latest.size + '</span></div>' +
-'<div class="latest-hint">* 这只是启动器 需配合游戏本体一起使用</div>' +
-'<div class="desc-wrap">' +
-'<span class="desc-text" id="latest-desc">' + latest.description + '</span>' +
-'<span class="desc-toggle" id="latest-toggle" style="display:none;">展开</span>' +
-'</div>' +
-'<div class="latest-actions">' +
-'<a class="btn-dl" href="' + latest.downloadUrl + '" target="_blank" rel="noopener">下载启动器</a>' +
-'<a class="btn-tutorial" href="' + TUTORIAL_URL + '" target="_blank" rel="noopener">使用教程</a>' +
-'</div>' +
-'</div>';
-var de = document.getElementById('latest-desc'),
-te = document.getElementById('latest-toggle');
-if (de && te) {
-checkOverflow(de, te);
-te.addEventListener('click', function() {
-var ex = de.classList.toggle('expanded');
-te.textContent = ex ? '收起' : '展开';
-});
-}
-}
-function getCurrentData() {
-var data = activeTab === 'launcher' ? launcherData : gameData;
-var query = searchInput.value.trim().toLowerCase();
-if (query) {
-data = data.filter(function(item) {
-return item.version.toLowerCase().indexOf(query) !== -1 ||
-item.description.toLowerCase().indexOf(query) !== -1;
-});
-}
-currentFilteredData = data;
-return data;
-}
-function renderVersionCards(pageData) {
-versionList.innerHTML = '';
-if (pageData.length === 0) {
-versionList.innerHTML = '<div class="empty-state">没有找到匹配的版本</div>';
-return;
-}
-pageData.forEach(function(item, idx) {
-var card = document.createElement('div');
-card.className = 'version-card';
-var did = 'vd-' + activeTab + '-' + idx,
-tid = 'vt-' + activeTab + '-' + idx;
-card.innerHTML = '<div class="version-card-inner">' +
-'<div class="version-info">' +
-'<div class="version-name">' + item.version + '</div>' +
-'<div class="vdesc-wrap">' +
-'<span class="vdesc-text" id="' + did + '">' + item.description + '</span>' +
-'<span class="vdesc-toggle" id="' + tid + '" style="display:none;">展开</span>' +
-'</div>' +
-'<div class="version-meta">' +
-'<span class="version-meta-tag">' + item.size + '</span>' +
-'<span class="version-meta-tag">' + item.date + '</span>' +
-'</div>' +
-'</div>' +
-'<a class="version-dl-btn" href="' + item.downloadUrl + '" target="_blank" rel="noopener">下载</a>' +
-'</div>';
-versionList.appendChild(card);
-var de = document.getElementById(did),
-te = document.getElementById(tid);
-if (de && te) {
-(function(d, t) {
-checkOverflow(d, t);
-t.addEventListener('click', function() {
-var ex = d.classList.toggle('expanded');
-t.textContent = ex ? '收起' : '展开';
-});
-})(de, te);
-}
-});
-}
-function renderPagination(totalItems, currentPageNum) {
-paginationEl.innerHTML = '';
-var totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-if (totalPages <= 1) return;
-function createBtn(cls, content, disabled, handler) {
-var btn = document.createElement('button');
-btn.className = cls;
-btn.innerHTML = content;
-btn.style.flexShrink = '1';
-btn.style.minWidth = '0';
-if (disabled) btn.disabled = true;
-if (handler) btn.addEventListener('click', handler);
-return btn;
-}
-function createPageBtn(num) {
-return createBtn('pagination-page' + (num === currentPageNum ? ' active' : ''), num, false, function() {
-currentPage = num;
-renderCurrentPage();
-versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
-});
-}
-function createDots() {
-var s = document.createElement('span');
-s.className = 'pagination-dots';
-s.textContent = '...';
-s.style.flexShrink = '1';
-s.style.minWidth = '0';
-return s;
-}
-var items = [];
-items.push(createBtn('pagination-btn', '&#8249;', currentPageNum <= 1, function() {
-if (currentPage > 1) {
-currentPage--;
-renderCurrentPage();
-versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
-}
-}));
-items.push(createPageBtn(1));
-if (totalPages <= 4) {
-for (var i = 2; i <= totalPages; i++) items.push(createPageBtn(i));
-} else {
-if (currentPageNum <= 4) {
-for (var j = 2; j <= 4; j++) items.push(createPageBtn(j));
-items.push(createDots());
-items.push(createPageBtn(totalPages));
-} else {
-items.push(createDots());
-if (currentPageNum - 1 > 1) items.push(createPageBtn(currentPageNum - 1));
-items.push(createPageBtn(currentPageNum));
-if (currentPageNum + 1 < totalPages) items.push(createPageBtn(currentPageNum + 1));
-items.push(createDots());
-items.push(createPageBtn(totalPages));
-}
-}
-items.push(createBtn('pagination-btn', '&#8250;', currentPageNum >= totalPages, function() {
-if (currentPage < totalPages) {
-currentPage++;
-renderCurrentPage();
-versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
-}
-}));
-items.forEach(function(it) {
-paginationEl.appendChild(it);
-});
-var gw = document.createElement('span');
-gw.className = 'pagination-goto';
-gw.style.flexShrink = '0';
-gw.style.marginLeft = '8px';
-var gi = document.createElement('input');
-gi.type = 'text';
-gi.className = 'pagination-goto-input';
-gi.placeholder = '\\';
-gi.maxLength = 3;
-gi.setAttribute('aria-label', '输入页码');
-var gb = document.createElement('button');
-gb.className = 'pagination-goto-btn';
-gb.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" style="width:18px;height:18px"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
-gb.setAttribute('aria-label', '跳转到指定页');
-var gm = document.createElement('button');
-gm.className = 'pagination-goto-mobile-trigger';
-gm.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:14px;height:14px"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
-gm.setAttribute('aria-label', '跳转页码');
-function doGoto(v) {
-var n = parseInt(v, 10);
-if (isNaN(n) || n < 1 || n > totalPages) {
-showToast('页码范围：1 ~ ' + totalPages);
-return;
-}
-currentPage = n;
-renderCurrentPage();
-gi.value = '';
-versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
-}
-gi.addEventListener('input', function() {
-this.value = this.value.replace(/[^\d]/g, '').slice(0, 3);
-});
-gi.addEventListener('keydown', function(e) {
-if (e.key === 'Enter') doGoto(this.value);
-});
-gb.addEventListener('click', function() {
-doGoto(gi.value);
-});
-gm.addEventListener('click', function() {
-openGotoPopup(totalPages);
-});
-gw.appendChild(gi);
-gw.appendChild(gb);
-gw.appendChild(gm);
-paginationEl.appendChild(gw);
-}
-function openGotoPopup(totalPages) {
-var ex = document.getElementById('gotoPopupOverlay');
-if (ex) ex.remove();
-var ol = document.createElement('div');
-ol.className = 'goto-popup-overlay active';
-ol.id = 'gotoPopupOverlay';
-var pp = document.createElement('div');
-pp.className = 'goto-popup';
-var tt = document.createElement('div');
-tt.className = 'goto-popup-title';
-tt.textContent = '跳转到第几页？(共 ' + totalPages + ' 页)';
-var rw = document.createElement('div');
-rw.className = 'goto-popup-row';
-var ip = document.createElement('input');
-ip.type = 'text';
-ip.className = 'goto-popup-input';
-ip.placeholder = '页码';
-ip.maxLength = 3;
-ip.inputMode = 'numeric';
-ip.addEventListener('input', function() {
-this.value = this.value.replace(/[^\d]/g, '').slice(0, 3);
-});
-var cb = document.createElement('button');
-cb.className = 'goto-popup-confirm';
-cb.textContent = '跳转';
-function doG() {
-var n = parseInt(ip.value, 10);
-if (isNaN(n) || n < 1 || n > totalPages) {
-showToast('页码范围：1 ~ ' + totalPages);
-return;
-}
-currentPage = n;
-renderCurrentPage();
-ol.remove();
-setTimeout(function() {
-versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
-}, 50);
-}
-ip.addEventListener('keydown', function(e) {
-if (e.key === 'Enter') doG();
-});
-cb.addEventListener('click', doG);
-ol.addEventListener('click', function(e) {
-if (e.target === ol) ol.remove();
-});
-rw.appendChild(ip);
-rw.appendChild(cb);
-pp.appendChild(tt);
-pp.appendChild(rw);
-ol.appendChild(pp);
-document.body.appendChild(ol);
-setTimeout(function() {
-ip.focus();
-}, 100);
-}
-function renderCurrentPage() {
-var data = getCurrentData();
-var start = (currentPage - 1) * ITEMS_PER_PAGE;
-renderVersionCards(data.slice(start, start + ITEMS_PER_PAGE));
-renderPagination(data.length, currentPage);
-}
-function switchTab(tab) {
-activeTab = tab;
-currentPage = 1;
-searchInput.value = '';
-searchDropdown.classList.remove('active');
-tabLauncher.classList.toggle('active', tab === 'launcher');
-tabGame.classList.toggle('active', tab === 'game');
-renderCurrentPage();
-}
-tabLauncher.addEventListener('click', function() {
-switchTab('launcher');
-});
-tabGame.addEventListener('click', function() {
-switchTab('game');
-});
-function updateSearchDropdown() {
-var query = searchInput.value.trim();
-searchDropdown.innerHTML = '';
-if (!query) {
-searchDropdown.classList.remove('active');
-return;
-}
-var lq = query.toLowerCase(),
-results = [];
-launcherData.forEach(function(item) {
-if (item.version.toLowerCase().indexOf(lq) !== -1 ||
-item.description.toLowerCase().indexOf(lq) !== -1) {
-results.push({item: item, type: 'launcher', typeName: '启动器'});
-}
-});
-gameData.forEach(function(item) {
-if (item.version.toLowerCase().indexOf(lq) !== -1 ||
-item.description.toLowerCase().indexOf(lq) !== -1) {
-results.push({item: item, type: 'game', typeName: '游戏本体'});
-}
-});
-if (results.length === 0) {
-searchDropdown.innerHTML = '<li class="search-dropdown-empty">没有找到匹配的版本</li>';
-} else {
-var eq = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-rx = new RegExp('(' + eq + ')', 'gi');
-results.slice(0, 8).forEach(function(r) {
-var li = document.createElement('li');
-li.className = 'search-dropdown-item';
-li.innerHTML = '<span class="search-item-type ' + r.type + '">' + r.typeName + '</span><span>' +
-r.item.version.replace(rx, '<mark>$1</mark>') + '</span>';
-li.addEventListener('click', function() {
-if (activeTab !== r.type) switchTab(r.type);
-searchInput.value = '';
-searchDropdown.classList.remove('active');
-var fd = activeTab === 'launcher' ? launcherData : gameData;
-var idx = -1;
-for (var i = 0; i < fd.length; i++) {
-if (fd[i].version === r.item.version) {
-idx = i;
-break;
-}
-}
-if (idx !== -1) {
-currentPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
-renderCurrentPage();
-setTimeout(function() {
-var cards = versionList.querySelectorAll('.version-card');
-var ci = idx % ITEMS_PER_PAGE;
-if (cards[ci]) {
-cards[ci].style.boxShadow = '0 0 0 3px var(--sm), var(--sd)';
-cards[ci].scrollIntoView({behavior: 'smooth', block: 'center'});
-setTimeout(function() {
-cards[ci].style.boxShadow = '';
-}, 2000);
-}
-}, 100);
-}
-});
-searchDropdown.appendChild(li);
-});
-}
-searchDropdown.classList.add('active');
-}
-searchInput.addEventListener('input', function() {
-currentPage = 1;
-renderCurrentPage();
-updateSearchDropdown();
-});
-searchInput.addEventListener('focus', function() {
-if (searchInput.value.trim().length >= 1) updateSearchDropdown();
-});
-searchInput.addEventListener('keydown', function(e) {
-if (e.key === 'Escape') {
-searchDropdown.classList.remove('active');
-searchInput.blur();
-}
-if (e.key === 'Enter') searchDropdown.classList.remove('active');
-});
-document.addEventListener('click', function(e) {
-if (!searchContainer.contains(e.target)) searchDropdown.classList.remove('active');
-});
-renderLatestCard();
-renderCurrentPage();
+  var LAUNCHER_ICON = 'http://shp.qpic.cn/collector/1976464052/97d2e4e6-a0ac-4104-99ec-13b66af8a785/0';
+  var GAME_ICON = 'http://shp.qpic.cn/collector/1976464052/e2e5de8f-a1cd-40e2-aef5-e6acc9327b3b/0';
+  var TUTORIAL_URL = 'https://pd.qq.com/s/vgb8c8gn';
+
+  var launcherData = [
+    {
+      version: '0.1.0',
+      date: '2026-06-07',
+      size: '66.65MB',
+      description: '修复联机大厅跨端联机连不上的BUG[2026-06-07]——这是加载(杀戮尖塔2)本体包的启动器，启动器与本体包须配套使用，缺一不可。目前推荐的游戏本体包版本为 v0.103.2 因为兼容性很不错（PS：你也可以同时装多个版本，启动器支持游戏本体包的多版本切换）',
+      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz4572e7b1dcbb438dbf1d2a1678cdce5a?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
+      isLatest: true
+    }
+  ];
+
+  var gameData = [
+    {
+      version: 'v0.103.2',
+      date: '2026-06-05',
+      size: '829.44MB',
+      description: '首个大更新！重做进阶6（删卡变贵），数值锁上限并移除纪元遗物以强力限制无限流，Boss重做，新增徽章与恐惧症模式。',
+      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6b56a9c2329149028afac59056d22849?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
+      isLatest: false
+    },
+    {
+      version: 'v0.103.3',
+      date: '2026-06-05',
+      size: '829.44MB',
+      description: '纯修Bug补丁（v0.103.2的修复版）。重点修复游戏崩溃、手柄交互、多人联机及遗物软锁问题，无新机制，纯粹提升稳定性。',
+      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6ff2c90c0b7248249d818620ae68b451?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
+      isLatest: false
+    },
+    {
+      version: 'v0.106.1',
+      date: '2026-06-05',
+      size: '862.12MB',
+      description: '新Boss修复。专为v0.106.0新增Boss永劫沙漏修Bug，修复其Wither卡牌在金字塔下异常保留、误强化及意图显示错误。',
+      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgza86aaebac7d941cf8067bb86a0fd48be?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
+      isLatest: false
+    },
+    {
+      version: 'v0.107.0',
+      date: '2026-06-05',
+      size: '865.39MB',
+      description: '这个版本我还没玩过，啥时候更新的？所以...猫猫暂时还没有想好介绍哦...',
+      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz43be7b3709f540b5be6ba344a6212b33?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
+      isLatest: false
+    }
+  ];
+
+  var activeTab = 'launcher';
+  var currentPage = 1;
+  var ITEMS_PER_PAGE = 8;
+  var currentFilteredData = null;
+
+  var latestCard = document.getElementById('latestCard');
+  var versionList = document.getElementById('versionList');
+  var paginationEl = document.getElementById('pagination');
+  var searchInput = document.getElementById('searchInput');
+  var searchDropdown = document.getElementById('searchDropdown');
+  var searchContainer = document.getElementById('searchContainer');
+  var tabLauncher = document.getElementById('tabLauncher');
+  var tabGame = document.getElementById('tabGame');
+  var toastEl = document.getElementById('toast');
+  var toastTimer;
+
+  // ===== GitHub Releases 自动同步 =====
+  var GITHUB_REPO = 'ModinMobileSTS/Sts2MobileLauncher';
+  var GITHUB_API_URL = 'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest';
+
+  function parseLatestRelease(data) {
+    if (!data) return null;
+    var version = data.tag_name || '未知版本';
+    var date = '';
+    if (data.published_at) {
+      var d = new Date(data.published_at);
+      date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    var size = '未知大小';
+    if (data.assets && data.assets.length > 0 && typeof data.assets[0].size === 'number') {
+      size = (data.assets[0].size / 1024 / 1024).toFixed(2) + 'MB';
+    }
+    var description = data.body || '（该版本暂无更新说明）';
+    var downloadUrl = 'resources/github_parsing/?url=https://github.com/' + GITHUB_REPO;
+    return {
+      version: version,
+      date: date,
+      size: size,
+      description: description,
+      downloadUrl: downloadUrl,
+      isLatest: true
+    };
+  }
+
+  // ===== 骨架屏 =====
+  function renderLatestCardSkeleton() {
+    latestCard.style.display = 'flex';
+    latestCard.classList.add('skeleton');
+    latestCard.classList.remove('content-ready');
+    latestCard.innerHTML =
+      '<div class="skeleton-shimmer-icon" style="width:64px;height:64px;flex-shrink:0;"></div>' +
+      '<div class="latest-info">' +
+        '<div class="skeleton-line" style="width:55%;height:22px;margin-bottom:8px;"></div>' +
+        '<div class="skeleton-line" style="width:42%;height:13px;margin-bottom:10px;"></div>' +
+        '<div class="skeleton-line" style="width:88%;height:13px;margin-bottom:6px;"></div>' +
+        '<div class="skeleton-line" style="width:62%;height:13px;margin-bottom:16px;"></div>' +
+        '<div class="latest-actions">' +
+          '<div class="skeleton-btn" style="width:104px;height:40px;"></div>' +
+          '<div class="skeleton-btn" style="width:90px;height:40px;"></div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  async function fetchAndRenderLatestRelease() {
+    var fallbackLatest = launcherData.find(function(d) { return d.isLatest; });
+    try {
+      var resp = await fetch(GITHUB_API_URL, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (!resp.ok) throw new Error('GitHub API 请求失败: ' + resp.status);
+      var data = await resp.json();
+      var latest = parseLatestRelease(data);
+      if (latest) { renderLatestCard(latest); return; }
+    } catch (e) {
+      console.warn('获取 GitHub latest release 失败，将使用本地写死数据：', e);
+    }
+    if (fallbackLatest) { renderLatestCard(fallbackLatest); }
+    else { latestCard.style.display = 'none'; }
+  }
+
+  // ===== 渲染真实卡片（带淡入动画） =====
+  function renderLatestCard(latest) {
+    if (!latest) { latestCard.style.display = 'none'; return; }
+
+    // 先移除骨架屏标记
+    latestCard.classList.remove('skeleton');
+
+    latestCard.style.display = 'flex';
+    latestCard.innerHTML =
+      '<img class="latest-icon" src="' + LAUNCHER_ICON + '" alt="启动器图标" onerror="this.style.display=\'none\'">' +
+      '<div class="latest-info">' +
+        '<div class="latest-version">' + latest.version + ' <span class="latest-suffix">/ 最新版本 / 启动器 / ' + latest.size + '</span></div>' +
+        '<div class="latest-hint">* 这只是启动器 需配合游戏本体一起使用</div>' +
+        '<div class="desc-wrap">' +
+          '<span class="desc-text" id="latest-desc">' + latest.description + '</span>' +
+          '<span class="desc-toggle" id="latest-toggle" style="display:none;">展开</span>' +
+        '</div>' +
+        '<div class="latest-actions">' +
+          '<a class="btn-dl" href="' + latest.downloadUrl + '" target="_blank" rel="noopener">下载启动器</a>' +
+          '<a class="btn-tutorial" href="' + TUTORIAL_URL + '" target="_blank" rel="noopener">使用教程</a>' +
+        '</div>' +
+      '</div>';
+
+    // 触发淡入动画
+    latestCard.classList.remove('content-ready');
+    void latestCard.offsetWidth; // 强制重排
+    latestCard.classList.add('content-ready');
+
+    var de = document.getElementById('latest-desc'),
+        te = document.getElementById('latest-toggle');
+    if (de && te) {
+      checkOverflow(de, te);
+      te.addEventListener('click', function() {
+        var ex = de.classList.toggle('expanded');
+        te.textContent = ex ? '收起' : '展开';
+      });
+    }
+  }
+
+  // ===== 原有逻辑（搜索、历史版本、分页等）保持不变 =====
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    toastTimer = setTimeout(function() {
+      toastEl.classList.remove('show');
+    }, 2200);
+  }
+
+  function checkOverflow(textEl, toggleEl) {
+    if (textEl.textContent.length > 40) {
+      toggleEl.style.display = 'inline';
+      return;
+    }
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        if (textEl.scrollWidth > textEl.clientWidth + 2) {
+          toggleEl.style.display = 'inline';
+        }
+      });
+    });
+  }
+
+  function getCurrentData() {
+    var data = activeTab === 'launcher' ? launcherData : gameData;
+    var query = searchInput.value.trim().toLowerCase();
+    if (query) {
+      data = data.filter(function(item) {
+        return item.version.toLowerCase().indexOf(query) !== -1 ||
+               item.description.toLowerCase().indexOf(query) !== -1;
+      });
+    }
+    currentFilteredData = data;
+    return data;
+  }
+
+  function renderVersionCards(pageData) {
+    versionList.innerHTML = '';
+    if (pageData.length === 0) {
+      versionList.innerHTML = '<div class="empty-state">没有找到匹配的版本</div>';
+      return;
+    }
+    pageData.forEach(function(item, idx) {
+      var card = document.createElement('div');
+      card.className = 'version-card';
+      var did = 'vd-' + activeTab + '-' + idx,
+          tid = 'vt-' + activeTab + '-' + idx;
+      card.innerHTML =
+        '<div class="version-card-inner">' +
+          '<div class="version-info">' +
+            '<div class="version-name">' + item.version + '</div>' +
+            '<div class="vdesc-wrap">' +
+              '<span class="vdesc-text" id="' + did + '">' + item.description + '</span>' +
+              '<span class="vdesc-toggle" id="' + tid + '" style="display:none;">展开</span>' +
+            '</div>' +
+            '<div class="version-meta">' +
+              '<span class="version-meta-tag">' + item.size + '</span>' +
+              '<span class="version-meta-tag">' + item.date + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<a class="version-dl-btn" href="' + item.downloadUrl + '" target="_blank" rel="noopener">下载</a>' +
+        '</div>';
+      versionList.appendChild(card);
+      var de = document.getElementById(did),
+          te = document.getElementById(tid);
+      if (de && te) {
+        (function(d, t) {
+          checkOverflow(d, t);
+          t.addEventListener('click', function() {
+            var ex = d.classList.toggle('expanded');
+            t.textContent = ex ? '收起' : '展开';
+          });
+        })(de, te);
+      }
+    });
+  }
+
+  function renderPagination(totalItems, currentPageNum) {
+    paginationEl.innerHTML = '';
+    var totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    if (totalPages <= 1) return;
+
+    function createBtn(cls, content, disabled, handler) {
+      var btn = document.createElement('button');
+      btn.className = cls;
+      btn.innerHTML = content;
+      btn.style.flexShrink = '1';
+      btn.style.minWidth = '0';
+      if (disabled) btn.disabled = true;
+      if (handler) btn.addEventListener('click', handler);
+      return btn;
+    }
+
+    function createPageBtn(num) {
+      return createBtn('pagination-page' + (num === currentPageNum ? ' active' : ''), num, false, function() {
+        currentPage = num;
+        renderCurrentPage();
+        versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
+      });
+    }
+
+    function createDots() {
+      var s = document.createElement('span');
+      s.className = 'pagination-dots';
+      s.textContent = '...';
+      s.style.flexShrink = '1';
+      s.style.minWidth = '0';
+      return s;
+    }
+
+    var items = [];
+    items.push(createBtn('pagination-btn', '&#8249;', currentPageNum <= 1, function() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderCurrentPage();
+        versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+    }));
+    items.push(createPageBtn(1));
+    if (totalPages <= 4) {
+      for (var i = 2; i <= totalPages; i++) items.push(createPageBtn(i));
+    } else {
+      if (currentPageNum <= 4) {
+        for (var j = 2; j <= 4; j++) items.push(createPageBtn(j));
+        items.push(createDots());
+        items.push(createPageBtn(totalPages));
+      } else {
+        items.push(createDots());
+        if (currentPageNum - 1 > 1) items.push(createPageBtn(currentPageNum - 1));
+        items.push(createPageBtn(currentPageNum));
+        if (currentPageNum + 1 < totalPages) items.push(createPageBtn(currentPageNum + 1));
+        items.push(createDots());
+        items.push(createPageBtn(totalPages));
+      }
+    }
+    items.push(createBtn('pagination-btn', '&#8250;', currentPageNum >= totalPages, function() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderCurrentPage();
+        versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+    }));
+
+    items.forEach(function(it) {
+      paginationEl.appendChild(it);
+    });
+
+    var gw = document.createElement('span');
+    gw.className = 'pagination-goto';
+    gw.style.flexShrink = '0';
+    gw.style.marginLeft = '8px';
+
+    var gi = document.createElement('input');
+    gi.type = 'text';
+    gi.className = 'pagination-goto-input';
+    gi.placeholder = '\\';
+    gi.maxLength = 3;
+    gi.setAttribute('aria-label', '输入页码');
+
+    var gb = document.createElement('button');
+    gb.className = 'pagination-goto-btn';
+    gb.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" style="width:18px;height:18px"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
+    gb.setAttribute('aria-label', '跳转到指定页');
+
+    var gm = document.createElement('button');
+    gm.className = 'pagination-goto-mobile-trigger';
+    gm.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:14px;height:14px"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
+    gm.setAttribute('aria-label', '跳转页码');
+
+    function doGoto(v) {
+      var n = parseInt(v, 10);
+      if (isNaN(n) || n < 1 || n > totalPages) {
+        showToast('页码范围：1 ~ ' + totalPages);
+        return;
+      }
+      currentPage = n;
+      renderCurrentPage();
+      gi.value = '';
+      versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+
+    gi.addEventListener('input', function() {
+      this.value = this.value.replace(/[^\d]/g, '').slice(0, 3);
+    });
+    gi.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doGoto(this.value);
+    });
+    gb.addEventListener('click', function() {
+      doGoto(gi.value);
+    });
+    gm.addEventListener('click', function() {
+      openGotoPopup(totalPages);
+    });
+
+    gw.appendChild(gi);
+    gw.appendChild(gb);
+    gw.appendChild(gm);
+    paginationEl.appendChild(gw);
+  }
+
+  function openGotoPopup(totalPages) {
+    var ex = document.getElementById('gotoPopupOverlay');
+    if (ex) ex.remove();
+    var ol = document.createElement('div');
+    ol.className = 'goto-popup-overlay active';
+    ol.id = 'gotoPopupOverlay';
+    var pp = document.createElement('div');
+    pp.className = 'goto-popup';
+    var tt = document.createElement('div');
+    tt.className = 'goto-popup-title';
+    tt.textContent = '跳转到第几页？(共 ' + totalPages + ' 页)';
+    var rw = document.createElement('div');
+    rw.className = 'goto-popup-row';
+    var ip = document.createElement('input');
+    ip.type = 'text';
+    ip.className = 'goto-popup-input';
+    ip.placeholder = '页码';
+    ip.maxLength = 3;
+    ip.inputMode = 'numeric';
+    ip.addEventListener('input', function() {
+      this.value = this.value.replace(/[^\d]/g, '').slice(0, 3);
+    });
+    var cb = document.createElement('button');
+    cb.className = 'goto-popup-confirm';
+    cb.textContent = '跳转';
+
+    function doG() {
+      var n = parseInt(ip.value, 10);
+      if (isNaN(n) || n < 1 || n > totalPages) {
+        showToast('页码范围：1 ~ ' + totalPages);
+        return;
+      }
+      currentPage = n;
+      renderCurrentPage();
+      ol.remove();
+      setTimeout(function() {
+        versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }, 50);
+    }
+
+    ip.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doG();
+    });
+    cb.addEventListener('click', doG);
+    ol.addEventListener('click', function(e) {
+      if (e.target === ol) ol.remove();
+    });
+
+    rw.appendChild(ip);
+    rw.appendChild(cb);
+    pp.appendChild(tt);
+    pp.appendChild(rw);
+    ol.appendChild(pp);
+    document.body.appendChild(ol);
+    setTimeout(function() {
+      ip.focus();
+    }, 100);
+  }
+
+  function renderCurrentPage() {
+    var data = getCurrentData();
+    var start = (currentPage - 1) * ITEMS_PER_PAGE;
+    renderVersionCards(data.slice(start, start + ITEMS_PER_PAGE));
+    renderPagination(data.length, currentPage);
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    currentPage = 1;
+    searchInput.value = '';
+    searchDropdown.classList.remove('active');
+    tabLauncher.classList.toggle('active', tab === 'launcher');
+    tabGame.classList.toggle('active', tab === 'game');
+    renderCurrentPage();
+  }
+
+  tabLauncher.addEventListener('click', function() {
+    switchTab('launcher');
+  });
+  tabGame.addEventListener('click', function() {
+    switchTab('game');
+  });
+
+  function updateSearchDropdown() {
+    var query = searchInput.value.trim();
+    searchDropdown.innerHTML = '';
+    if (!query) {
+      searchDropdown.classList.remove('active');
+      return;
+    }
+    var lq = query.toLowerCase(),
+        results = [];
+    launcherData.forEach(function(item) {
+      if (item.version.toLowerCase().indexOf(lq) !== -1 || item.description.toLowerCase().indexOf(lq) !== -1) {
+        results.push({item: item, type: 'launcher', typeName: '启动器'});
+      }
+    });
+    gameData.forEach(function(item) {
+      if (item.version.toLowerCase().indexOf(lq) !== -1 || item.description.toLowerCase().indexOf(lq) !== -1) {
+        results.push({item: item, type: 'game', typeName: '游戏本体'});
+      }
+    });
+    if (results.length === 0) {
+      searchDropdown.innerHTML = '<li class="search-dropdown-empty">没有找到匹配的版本</li>';
+    } else {
+      var eq = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+          rx = new RegExp('(' + eq + ')', 'gi');
+      results.slice(0, 8).forEach(function(r) {
+        var li = document.createElement('li');
+        li.className = 'search-dropdown-item';
+        li.innerHTML = '<span class="search-item-type ' + r.type + '">' + r.typeName + '</span><span>' + r.item.version.replace(rx, '<mark>$1</mark>') + '</span>';
+        li.addEventListener('click', function() {
+          if (activeTab !== r.type) switchTab(r.type);
+          searchInput.value = '';
+          searchDropdown.classList.remove('active');
+          var fd = activeTab === 'launcher' ? launcherData : gameData;
+          var idx = -1;
+          for (var i = 0; i < fd.length; i++) {
+            if (fd[i].version === r.item.version) {
+              idx = i;
+              break;
+            }
+          }
+          if (idx !== -1) {
+            currentPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
+            renderCurrentPage();
+            setTimeout(function() {
+              var cards = versionList.querySelectorAll('.version-card');
+              var ci = idx % ITEMS_PER_PAGE;
+              if (cards[ci]) {
+                cards[ci].style.boxShadow = '0 0 0 3px var(--sm), var(--sd)';
+                cards[ci].scrollIntoView({behavior: 'smooth', block: 'center'});
+                setTimeout(function() {
+                  cards[ci].style.boxShadow = '';
+                }, 2000);
+              }
+            }, 100);
+          }
+        });
+        searchDropdown.appendChild(li);
+      });
+    }
+    searchDropdown.classList.add('active');
+  }
+
+  searchInput.addEventListener('input', function() {
+    currentPage = 1;
+    renderCurrentPage();
+    updateSearchDropdown();
+  });
+  searchInput.addEventListener('focus', function() {
+    if (searchInput.value.trim().length >= 1) updateSearchDropdown();
+  });
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchDropdown.classList.remove('active');
+      searchInput.blur();
+    }
+    if (e.key === 'Enter') searchDropdown.classList.remove('active');
+  });
+  document.addEventListener('click', function(e) {
+    if (!searchContainer.contains(e.target)) searchDropdown.classList.remove('active');
+  });
+
+  // ===== 初始化 =====
+  renderLatestCardSkeleton();       // 1. 立即显示骨架屏
+  renderCurrentPage();               // 2. 渲染历史版本
+  fetchAndRenderLatestRelease();     // 3. 异步拉取 GitHub 数据后替换骨架屏
+
 })();
 </script>
 </body>
