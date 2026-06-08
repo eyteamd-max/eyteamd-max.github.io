@@ -40,14 +40,12 @@ body {
 }
 .page-container { max-width: 820px; margin: 0 auto; padding: 28px 22px 60px; }
 .page-header {
-  display: flex; align-items: center; gap: 14px;
-  margin-bottom: 30px; padding: 12px 20px;
-  background: #fffdfb; border-radius: 10px; box-shadow: var(--ss);
+  display: flex; align-items: center; gap: 14px; margin-bottom: 30px;
+  padding: 12px 20px; background: #fffdfb; border-radius: 10px; box-shadow: var(--ss);
 }
 .back-area {
-  display: flex; align-items: center; gap: 8px;
-  padding-right: 14px; border-right: 1.5px solid #e8e2dc;
-  flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; padding-right: 14px;
+  border-right: 1.5px solid #e8e2dc; flex-shrink: 0; cursor: pointer;
 }
 .back-area svg { width: 20px; height: 20px; color: var(--tp); }
 .back-area:hover svg { color: var(--sm); }
@@ -57,19 +55,17 @@ body {
 .author-info { display: flex; flex-direction: column; line-height: 1.3; }
 .author-line { font-size: 0.75rem; color: var(--tm); }
 .bili-link {
-  display: inline-flex; align-items: center;
-  width: 24px; height: 24px; color: var(--ts); transition: color 0.2s;
+  display: inline-flex; align-items: center; width: 24px; height: 24px;
+  color: var(--ts); transition: color 0.2s;
 }
 .bili-link:hover { color: #fb7299; }
 .bili-link svg { width: 100%; height: 100%; }
-.latest-section { margin-bottom: 28px; }
 
-/* ===== 最新版本卡片 ===== */
+.latest-section { margin-bottom: 28px; }
 .latest-card {
   background: #fffdfb; border-radius: 10px; padding: 24px;
   box-shadow: var(--ss); display: flex; gap: 20px; align-items: flex-start;
-  transition: transform 0.35s var(--tb), box-shadow 0.35s var(--tb), opacity 0.35s ease;
-  position: relative; overflow: hidden;
+  transition: all 0.35s var(--tb); position: relative; overflow: hidden;
 }
 .latest-card:hover { transform: translateY(-4px); box-shadow: var(--sd); }
 .latest-card::after {
@@ -82,22 +78,30 @@ body {
   flex-shrink: 0; border: 1.5px solid #e8e2dc; background: #f5f2f8;
 }
 .latest-info { flex: 1; min-width: 0; }
+.latest-version { font-weight: 700; margin-bottom: 6px; color: var(--tp); }
 
-/* 版本号行：强制不换行 */
-.latest-version {
-  font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; color: var(--tp);
+/* ===== 新增：版本行不换行 + 自适应字号 ===== */
+.latest-version-line {
+  white-space: nowrap;
+  overflow: visible;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.latest-version-tag {
+  font-size: clamp(0.72rem, 1.8vw, 0.82rem);
+  color: var(--tm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
-.latest-suffix {
-  font-size: 0.76rem; color: var(--tm); font-weight: 600; letter-spacing: 0.05em;
-}
-
-/* 提示行：强制不换行 */
 .latest-hint {
-  font-size: 0.72rem; color: var(--sm); font-weight: 500; margin-bottom: 10px;
+  font-size: clamp(0.62rem, 1.5vw, 0.72rem);
+  color: var(--sm);
+  font-weight: 500;
+  margin-bottom: 10px;
   white-space: nowrap;
 }
-
 .desc-wrap { display: flex; align-items: baseline; gap: 6px; margin-bottom: 16px; }
 .desc-text {
   flex: 1; min-width: 0; font-size: 0.88rem; color: var(--ts);
@@ -113,64 +117,64 @@ body {
 .btn-dl {
   display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px;
   background: var(--sm); color: #fff; border: 1.5px solid #c97a7a;
-  border-radius: 8px; font-weight: 700; font-size: 0.9rem;
-  cursor: pointer; text-decoration: none; transition: all 0.3s var(--tb);
+  border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  text-decoration: none; transition: all 0.3s var(--tb);
 }
 .btn-dl:hover { background: #fff; color: var(--sm); transform: scale(1.05); }
 .btn-tutorial {
   display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px;
   background: #fffdfb; color: var(--tp); border: 1.5px solid var(--bd);
-  border-radius: 8px; font-weight: 700; font-size: 0.9rem;
-  cursor: pointer; text-decoration: none; transition: all 0.3s var(--tb);
+  border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  text-decoration: none; transition: all 0.3s var(--tb);
 }
-.btn-tutorial:hover {
-  background: var(--mj); color: #3d6b4f; border-color: #8cc8a0; transform: scale(1.05);
-}
+.btn-tutorial:hover { background: var(--mj); color: #3d6b4f; border-color: #8cc8a0; transform: scale(1.05); }
 
-/* ===== 骨架屏加载动画 ===== */
-@keyframes skeletonShimmer {
+/* ===== 新增：加载动画 ===== */
+.latest-card-loading {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+}
+.skeleton-icon {
+  width: 64px; height: 64px; border-radius: 14px;
+  background: linear-gradient(90deg, #ece7f3 25%, #e2dbd0 50%, #ece7f3 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.skeleton-info { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.skeleton-line {
+  height: 14px; border-radius: 6px;
+  background: linear-gradient(90deg, #ece7f3 25%, #e2dbd0 50%, #ece7f3 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+.skeleton-line.w70 { width: 70%; }
+.skeleton-line.w50 { width: 50%; }
+.skeleton-line.w90 { width: 90%; }
+.skeleton-line.w40 { width: 40%; height: 32px; border-radius: 8px; }
+@keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-.skeleton-shimmer-icon {
-  background: linear-gradient(90deg, #f0ece4 25%, #e8e2dc 50%, #f0ece4 75%);
-  background-size: 200% 100%;
-  animation: skeletonShimmer 1.6s ease-in-out infinite;
-  border-radius: 14px;
-  border: 1.5px solid #ece7df;
+.latest-card-error {
+  padding: 20px;
+  text-align: center;
+  color: var(--tm);
+  font-size: 0.9rem;
 }
-.skeleton-line {
-  border-radius: 6px;
-  background: linear-gradient(90deg, #f0ece4 25%, #e8e2dc 50%, #f0ece4 75%);
-  background-size: 200% 100%;
-  animation: skeletonShimmer 1.6s ease-in-out infinite;
-}
-.skeleton-btn {
-  border-radius: 8px;
-  background: linear-gradient(90deg, #f0ece4 25%, #e8e2dc 50%, #f0ece4 75%);
-  background-size: 200% 100%;
-  animation: skeletonShimmer 1.6s ease-in-out infinite;
-}
-.latest-card.skeleton { pointer-events: none; }
-.latest-card.skeleton::after { display: none; }
-.latest-card.skeleton .latest-icon { display: none; }
-
-/* 卡片内容淡入 */
-@keyframes latestCardFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.latest-card.content-ready {
-  animation: latestCardFadeIn 0.4s ease both;
+.latest-card-error a {
+  color: var(--sm);
+  font-weight: 600;
 }
 
-/* ===== 以下为原页面样式，未改动 ===== */
 .search-section { margin-bottom: 26px; position: relative; z-index: 50; }
 .search-container { position: relative; }
 .search-input {
   width: 100%; padding: 10px 40px 10px 16px; font-size: 0.9rem;
-  border: 1.5px solid #e8e2dc; border-radius: 8px;
-  background: var(--bg); color: var(--tp); outline: none; transition: all 0.3s;
+  border: 1.5px solid #e8e2dc; border-radius: 8px; background: var(--bg);
+  color: var(--tp); outline: none; transition: all 0.3s;
 }
 .search-input:focus { border-color: var(--sm); background: #fff; }
 .search-input::placeholder { color: var(--tm); }
@@ -194,19 +198,12 @@ body {
   display: flex; align-items: center; gap: 10px; transition: background 0.15s;
 }
 .search-dropdown-item:hover { background: #fef0f0; color: #c97a7a; }
-.search-dropdown-item mark {
-  background: #fef0f0; color: #c97a7a; font-weight: 600;
-  padding: 0 2px; border-radius: 3px;
-}
-.search-dropdown-empty {
-  padding: 18px 20px; text-align: center; color: var(--tm); font-size: 0.88rem;
-}
-.search-item-type {
-  font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
-  font-weight: 600; flex-shrink: 0;
-}
+.search-dropdown-item mark { background: #fef0f0; color: #c97a7a; font-weight: 600; padding: 0 2px; border-radius: 3px; }
+.search-dropdown-empty { padding: 18px 20px; text-align: center; color: var(--tm); font-size: 0.88rem; }
+.search-item-type { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; flex-shrink: 0; }
 .search-item-type.launcher { background: #fef0f0; color: #c97a7a; }
 .search-item-type.game { background: #e8f5e8; color: #3d6b4f; }
+
 .history-section { margin-bottom: 20px; }
 .history-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -217,40 +214,35 @@ body {
   border-left: 5px solid var(--sm); white-space: nowrap; flex-shrink: 0; color: var(--tp);
 }
 .history-title::after {
-  content: ''; position: relative; display: block;
-  bottom: -4px; left: 0; width: 30px; height: 3px;
-  background: var(--mj); border-radius: 2px;
+  content: ''; position: relative; display: block; bottom: -4px; left: 0;
+  width: 30px; height: 3px; background: var(--mj); border-radius: 2px;
 }
 .tab-group {
   display: inline-flex; border: 1.5px solid #e8e2dc; border-radius: 8px;
   overflow: hidden; background: #fffdfb; flex-shrink: 0;
 }
 .tab-btn {
-  padding: 9px 22px; border: none; border-radius: 0;
-  background: transparent; font-weight: 600; font-size: 0.85rem;
-  color: var(--ts); cursor: pointer; transition: all 0.25s;
-  font-family: var(--ft); white-space: nowrap;
+  padding: 9px 22px; border: none; border-radius: 0; background: transparent;
+  font-weight: 600; font-size: 0.85rem; color: var(--ts); cursor: pointer;
+  transition: all 0.25s; font-family: var(--ft); white-space: nowrap;
 }
 .tab-btn + .tab-btn { border-left: 1.5px solid #e8e2dc; }
 .tab-btn.active { background: var(--sm); color: #fff; }
 .tab-btn:hover:not(.active) { background: #fef0f0; }
-.version-list {
-  display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px;
-}
+
+.version-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px; }
 .version-card {
-  background: #fffdfb; border-radius: 10px; overflow: hidden;
-  box-shadow: var(--ss); transition: all 0.35s var(--tb); cursor: default;
+  background: #fffdfb; border-radius: 10px; overflow: hidden; box-shadow: var(--ss);
+  transition: all 0.35s var(--tb); cursor: default;
 }
 .version-card:hover { transform: translateY(-3px); box-shadow: var(--sd); }
-.version-card-inner {
-  padding: 18px 20px; display: flex; align-items: center; gap: 16px;
-}
+.version-card-inner { padding: 18px 20px; display: flex; align-items: center; gap: 16px; }
 .version-info { flex: 1; min-width: 0; }
 .version-name { font-weight: 700; font-size: 1.02rem; margin-bottom: 4px; color: var(--tp); }
 .vdesc-wrap { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
 .vdesc-text {
-  flex: 1; min-width: 0; font-size: 0.84rem; color: var(--ts);
-  line-height: 1.55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; min-width: 0; font-size: 0.84rem; color: var(--ts); line-height: 1.55;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .vdesc-text.expanded { white-space: normal; overflow: visible; }
 .vdesc-toggle {
@@ -266,26 +258,22 @@ body {
 .version-dl-btn {
   display: inline-flex; align-items: center; padding: 9px 20px;
   background: var(--sm); color: #fff; border: 1.5px solid #c97a7a;
-  border-radius: 8px; font-weight: 700; font-size: 0.85rem;
-  cursor: pointer; text-decoration: none; transition: all 0.3s var(--tb);
-  white-space: nowrap; flex-shrink: 0;
+  border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+  text-decoration: none; transition: all 0.3s var(--tb); white-space: nowrap; flex-shrink: 0;
 }
 .version-dl-btn:hover { background: #fff; color: var(--sm); transform: scale(1.05); }
-.empty-state {
-  text-align: center; padding: 50px 20px; color: var(--tm); font-size: 0.92rem;
-}
+.empty-state { text-align: center; padding: 50px 20px; color: var(--tm); font-size: 0.92rem; }
+
 .pagination {
   display: flex; justify-content: center; align-items: center; gap: 8px;
   margin: 30px 0 40px; flex-wrap: nowrap; overflow: hidden;
 }
 .pagination-btn, .pagination-page {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 36px; height: 36px; padding: 0 10px;
-  background: #fffdfb; border: 2px solid var(--bd);
-  border-radius: 10px; font-family: var(--ft); font-size: 0.85rem;
-  font-weight: 600; color: var(--tp); cursor: pointer;
-  transition: all 0.3s var(--tb); box-shadow: var(--ss); user-select: none;
-  flex-shrink: 0;
+  min-width: 36px; height: 36px; padding: 0 10px; background: #fffdfb;
+  border: 2px solid var(--bd); border-radius: 10px; font-family: var(--ft);
+  font-size: 0.85rem; font-weight: 600; color: var(--tp); cursor: pointer;
+  transition: all 0.3s var(--tb); box-shadow: var(--ss); user-select: none; flex-shrink: 0;
 }
 .pagination-btn:hover:not(:disabled), .pagination-page:hover:not(.active) {
   background: var(--sl); color: #fff; border-color: #c97a7a; transform: scale(1.07);
@@ -295,20 +283,13 @@ body {
   background: var(--sm); color: #fff; border-color: #c97a7a;
   box-shadow: 0 2px 12px rgba(232,155,155,0.3);
 }
-.pagination-dots {
-  color: var(--tm); font-weight: 600; padding: 0 4px;
-  user-select: none; flex-shrink: 0;
-}
-.pagination-goto {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-left: 8px; flex-shrink: 0;
-}
+.pagination-dots { color: var(--tm); font-weight: 600; padding: 0 4px; user-select: none; flex-shrink: 0; }
+.pagination-goto { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; flex-shrink: 0; }
 .pagination-goto-input {
   width: 48px; height: 36px; padding: 0 8px; background: #fffdfb;
-  border: 2px solid var(--bd); border-radius: 10px;
-  font-family: var(--ft); font-size: 0.85rem; font-weight: 600;
-  color: var(--tp); text-align: center; outline: none;
-  box-shadow: var(--ss); transition: all 0.3s var(--tb); -moz-appearance: textfield;
+  border: 2px solid var(--bd); border-radius: 10px; font-family: var(--ft);
+  font-size: 0.85rem; font-weight: 600; color: var(--tp); text-align: center;
+  outline: none; box-shadow: var(--ss); transition: all 0.3s var(--tb); -moz-appearance: textfield;
 }
 .pagination-goto-input::-webkit-outer-spin-button,
 .pagination-goto-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -316,29 +297,25 @@ body {
 .pagination-goto-btn {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 36px; height: 36px; padding: 0 10px; background: #fffdfb;
-  border: 2px solid var(--bd); border-radius: 10px;
-  font-family: var(--ft); font-size: 0.8rem; font-weight: 600;
-  color: var(--tp); cursor: pointer; transition: all 0.3s var(--tb);
-  box-shadow: var(--ss); user-select: none;
+  border: 2px solid var(--bd); border-radius: 10px; font-family: var(--ft);
+  font-size: 0.8rem; font-weight: 600; color: var(--tp); cursor: pointer;
+  transition: all 0.3s var(--tb); box-shadow: var(--ss); user-select: none;
 }
-.pagination-goto-btn:hover {
-  background: var(--sl); color: #fff; border-color: #c97a7a; transform: scale(1.07);
-}
+.pagination-goto-btn:hover { background: var(--sl); color: #fff; border-color: #c97a7a; transform: scale(1.07); }
 .pagination-goto-mobile-trigger { display: none; }
+
 .toast {
-  position: fixed; bottom: 28px; left: 50%;
-  transform: translateX(-50%) translateY(120px);
-  background: #fffefb; border: 1.5px solid #d5cdc0;
-  border-radius: 12px; padding: 10px 22px; font-weight: 550;
-  font-size: 0.88rem; color: var(--tp); box-shadow: var(--sd);
-  transition: transform 0.35s cubic-bezier(0.34,1.4,0.64,1);
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(120px);
+  background: #fffefb; border: 1.5px solid #d5cdc0; border-radius: 12px;
+  padding: 10px 22px; font-weight: 550; font-size: 0.88rem; color: var(--tp);
+  box-shadow: var(--sd); transition: transform 0.35s cubic-bezier(0.34,1.4,0.64,1);
   z-index: 600; white-space: nowrap; pointer-events: none;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
 .goto-popup-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.25); z-index: 700;
-  align-items: flex-end; justify-content: center;
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.25);
+  z-index: 700; align-items: flex-end; justify-content: center;
 }
 .goto-popup-overlay.active { display: flex; }
 .goto-popup {
@@ -348,34 +325,30 @@ body {
   display: flex; flex-direction: column; align-items: center; gap: 16px;
   animation: popupSlideUp 0.3s var(--tb);
 }
-@keyframes popupSlideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
+@keyframes popupSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .goto-popup-title { font-size: 0.95rem; font-weight: 600; color: var(--tp); }
 .goto-popup-row { display: flex; align-items: center; gap: 10px; }
 .goto-popup-input {
   width: 80px; height: 44px; padding: 0 14px; background: #fffdfb;
-  border: 2.5px solid var(--bd); border-radius: 30px;
-  font-family: var(--ft); font-size: 1rem; font-weight: 600;
-  color: var(--tp); text-align: center; outline: none; -moz-appearance: textfield;
+  border: 2.5px solid var(--bd); border-radius: 30px; font-family: var(--ft);
+  font-size: 1rem; font-weight: 600; color: var(--tp); text-align: center;
+  outline: none; -moz-appearance: textfield;
 }
 .goto-popup-input::-webkit-outer-spin-button,
 .goto-popup-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .goto-popup-input:focus { border-color: var(--sm); }
 .goto-popup-confirm {
   height: 44px; padding: 0 24px; background: var(--sm); color: #fff;
-  border: 2.5px solid #c97a7a; border-radius: 30px;
-  font-family: var(--ft); font-size: 0.92rem; font-weight: 700;
-  cursor: pointer; transition: all 0.3s var(--tb);
+  border: 2.5px solid #c97a7a; border-radius: 30px; font-family: var(--ft);
+  font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: all 0.3s var(--tb);
 }
 .goto-popup-confirm:hover { background: #fff; color: var(--sm); transform: scale(1.05); }
+
 .footer {
   text-align: center; padding: 30px 0 20px; color: var(--tm);
   font-size: 0.9rem; border-top: 1px solid #e8e2dc; margin-top: 20px;
 }
 
-/* ===== 移动端适配 ===== */
 @media (max-width: 600px) {
   .page-container { padding: 16px 14px 50px; }
   .page-header { gap: 10px; }
@@ -383,44 +356,27 @@ body {
   .page-title { font-size: 1.2rem; }
   .latest-card { padding: 18px; gap: 14px; }
   .latest-icon { width: 52px; height: 52px; border-radius: 14px; }
-
-  /* 版本号行：缩小字号保证不换行 */
-  .latest-version { font-size: 0.95rem; }
-  .latest-suffix { font-size: 0.6rem; }
-  /* 提示行：缩小字号保证不换行 */
-  .latest-hint { font-size: 0.58rem; }
-
+  .skeleton-icon { width: 52px; height: 52px; }
   .latest-actions { gap: 8px; }
   .btn-dl, .btn-tutorial { padding: 9px 18px; font-size: 0.84rem; }
-
-  /* 骨架屏图标移动端 */
-  .skeleton-shimmer-icon { width: 52px !important; height: 52px !important; }
-
   .history-header { gap: 10px; }
   .history-title { font-size: 1.1rem; }
   .tab-btn { padding: 8px 16px; font-size: 0.82rem; }
-  .version-card-inner {
-    padding: 14px 16px; flex-direction: column; align-items: stretch; gap: 10px;
-  }
+  .version-card-inner { padding: 14px 16px; flex-direction: column; align-items: stretch; gap: 10px; }
   .version-info { width: 100%; }
   .version-dl-btn { align-self: flex-end; }
   .pagination { gap: 6px; }
-  .pagination-btn, .pagination-page {
-    min-width: 34px; height: 34px; font-size: 0.82rem; padding: 0 8px;
-  }
+  .pagination-btn, .pagination-page { min-width: 34px; height: 34px; font-size: 0.82rem; padding: 0 8px; }
   .pagination-dots { font-size: 0.82rem; padding: 0 2px; }
   .pagination-goto-input, .pagination-goto-btn { display: none; }
   .pagination-goto-mobile-trigger {
     display: inline-flex; align-items: center; justify-content: center;
-    min-width: 34px; height: 34px; padding: 0 8px;
-    background: #fffdfb; border: 2px solid var(--bd);
-    border-radius: 10px; font-size: 0.82rem; font-weight: 600;
-    color: var(--tp); cursor: pointer; box-shadow: var(--ss);
+    min-width: 34px; height: 34px; padding: 0 8px; background: #fffdfb;
+    border: 2px solid var(--bd); border-radius: 10px; font-size: 0.82rem;
+    font-weight: 600; color: var(--tp); cursor: pointer; box-shadow: var(--ss);
     transition: all 0.3s var(--tb); user-select: none;
   }
-  .pagination-goto-mobile-trigger:hover {
-    background: var(--sl); color: #fff; border-color: #c97a7a;
-  }
+  .pagination-goto-mobile-trigger:hover { background: var(--sl); color: #fff; border-color: #c97a7a; }
   .pagination-goto { margin-left: 6px; }
 }
 @media (min-width: 601px) {
@@ -453,7 +409,18 @@ body {
   </header>
 
   <section class="latest-section">
-    <div class="latest-card" id="latestCard"></div>
+    <div class="latest-card" id="latestCard">
+      <!-- 加载骨架屏占位 -->
+      <div class="latest-card-loading">
+        <div class="skeleton-icon"></div>
+        <div class="skeleton-info">
+          <div class="skeleton-line w70"></div>
+          <div class="skeleton-line w50"></div>
+          <div class="skeleton-line w90"></div>
+          <div class="skeleton-line w40"></div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="search-section">
@@ -489,50 +456,22 @@ body {
   var GAME_ICON = 'http://shp.qpic.cn/collector/1976464052/e2e5de8f-a1cd-40e2-aef5-e6acc9327b3b/0';
   var TUTORIAL_URL = 'https://pd.qq.com/s/vgb8c8gn';
 
-  var launcherData = [
-    {
-      version: '0.1.0',
-      date: '2026-06-07',
-      size: '66.65MB',
-      description: '修复联机大厅跨端联机连不上的BUG[2026-06-07]——这是加载(杀戮尖塔2)本体包的启动器，启动器与本体包须配套使用，缺一不可。目前推荐的游戏本体包版本为 v0.103.2 因为兼容性很不错（PS：你也可以同时装多个版本，启动器支持游戏本体包的多版本切换）',
-      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz4572e7b1dcbb438dbf1d2a1678cdce5a?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-      isLatest: true
-    }
-  ];
+  /* ===== 修复：使用从根目录开始的绝对路径 ===== */
+  var LAUNCHER_DL_URL = '/resources/github_parsing/?url=https://github.com/ModinMobileSTS/Sts2MobileLauncher';
+
+  /* ===== 降级用的静态数据 ===== */
+  var FALLBACK_LAUNCHER_DATA = {
+    version: '0.1.0',
+    date: '2026-06-07',
+    size: '66.65MB',
+    description: '修复联机大厅跨端联机连不上的BUG[2026-06-07]——这是加载(杀戮尖塔2)本体包的启动器，启动器与本体包须配套使用，缺一不可。目前推荐的游戏本体包版本为 v0.103.2 因为兼容性很不错（PS：你也可以同时装多个版本，启动器支持游戏本体包的多版本切换）'
+  };
 
   var gameData = [
-    {
-      version: 'v0.103.2',
-      date: '2026-06-05',
-      size: '829.44MB',
-      description: '首个大更新！重做进阶6（删卡变贵），数值锁上限并移除纪元遗物以强力限制无限流，Boss重做，新增徽章与恐惧症模式。',
-      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6b56a9c2329149028afac59056d22849?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-      isLatest: false
-    },
-    {
-      version: 'v0.103.3',
-      date: '2026-06-05',
-      size: '829.44MB',
-      description: '纯修Bug补丁（v0.103.2的修复版）。重点修复游戏崩溃、手柄交互、多人联机及遗物软锁问题，无新机制，纯粹提升稳定性。',
-      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6ff2c90c0b7248249d818620ae68b451?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-      isLatest: false
-    },
-    {
-      version: 'v0.106.1',
-      date: '2026-06-05',
-      size: '862.12MB',
-      description: '新Boss修复。专为v0.106.0新增Boss永劫沙漏修Bug，修复其Wither卡牌在金字塔下异常保留、误强化及意图显示错误。',
-      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgza86aaebac7d941cf8067bb86a0fd48be?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-      isLatest: false
-    },
-    {
-      version: 'v0.107.0',
-      date: '2026-06-05',
-      size: '865.39MB',
-      description: '这个版本我还没玩过，啥时候更新的？所以...猫猫暂时还没有想好介绍哦...',
-      downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz43be7b3709f540b5be6ba344a6212b33?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D',
-      isLatest: false
-    }
+    { version: 'v0.103.2', date: '2026-06-05', size: '829.44MB', description: '首个大更新！重做进阶6（删卡变贵），数值锁上限并移除纪元遗物以强力限制无限流，Boss重做，新增徽章与恐惧症模式。', downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6b56a9c2329149028afac59056d22849?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D', isLatest: false },
+    { version: 'v0.103.3', date: '2026-06-05', size: '829.44MB', description: '纯修Bug补丁（v0.103.2的修复版）。重点修复游戏崩溃、手柄交互、多人联机及遗物软锁问题，无新机制，纯粹提升稳定性。', downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6ff2c90c0b7248249d818620ae68b451?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D', isLatest: false },
+    { version: 'v0.106.1', date: '2026-06-05', size: '862.12MB', description: '新Boss修复。专为v0.106.0新增Boss永劫沙漏修Bug，修复其Wither卡牌在金字塔下异常保留、误强化及意图显示错误。', downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgza86aaebac7d941cf8067bb86a0fd48be?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D', isLatest: false },
+    { version: 'v0.107.0', date: '2026-06-05', size: '865.39MB', description: '这个版本我还没玩过，啥时候更新的？所以...猫猫暂时还没有想好介绍哦...', downloadUrl: 'https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz43be7b3709f540b5be6ba344a6212b33?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D', isLatest: false }
   ];
 
   var activeTab = 'launcher';
@@ -551,100 +490,107 @@ body {
   var toastEl = document.getElementById('toast');
   var toastTimer;
 
-  // ===== GitHub Releases 自动同步 =====
-  var GITHUB_REPO = 'ModinMobileSTS/Sts2MobileLauncher';
-  var GITHUB_API_URL = 'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest';
-
-  function parseLatestRelease(data) {
-    if (!data) return null;
-    var version = data.tag_name || '未知版本';
-    var date = '';
-    if (data.published_at) {
-      var d = new Date(data.published_at);
-      date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    }
-    var size = '未知大小';
-    if (data.assets && data.assets.length > 0 && typeof data.assets[0].size === 'number') {
-      size = (data.assets[0].size / 1024 / 1024).toFixed(2) + 'MB';
-    }
-    var description = data.body || '（该版本暂无更新说明）';
-    var downloadUrl = 'resources/github_parsing/?url=https://github.com/' + GITHUB_REPO;
-    return {
-      version: version,
-      date: date,
-      size: size,
-      description: description,
-      downloadUrl: downloadUrl,
-      isLatest: true
-    };
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    toastTimer = setTimeout(function() { toastEl.classList.remove('show'); }, 2200);
   }
 
-  // ===== 骨架屏 =====
-  function renderLatestCardSkeleton() {
-    latestCard.style.display = 'flex';
-    latestCard.classList.add('skeleton');
-    latestCard.classList.remove('content-ready');
-    latestCard.innerHTML =
-      '<div class="skeleton-shimmer-icon" style="width:64px;height:64px;flex-shrink:0;"></div>' +
-      '<div class="latest-info">' +
-        '<div class="skeleton-line" style="width:55%;height:22px;margin-bottom:8px;"></div>' +
-        '<div class="skeleton-line" style="width:42%;height:13px;margin-bottom:10px;"></div>' +
-        '<div class="skeleton-line" style="width:88%;height:13px;margin-bottom:6px;"></div>' +
-        '<div class="skeleton-line" style="width:62%;height:13px;margin-bottom:16px;"></div>' +
-        '<div class="latest-actions">' +
-          '<div class="skeleton-btn" style="width:104px;height:40px;"></div>' +
-          '<div class="skeleton-btn" style="width:90px;height:40px;"></div>' +
-        '</div>' +
-      '</div>';
-  }
-
-  async function fetchAndRenderLatestRelease() {
-    var fallbackLatest = launcherData.find(function(d) { return d.isLatest; });
-    try {
-      var resp = await fetch(GITHUB_API_URL, {
-        headers: { 'Accept': 'application/vnd.github.v3+json' }
+  function checkOverflow(textEl, toggleEl) {
+    if (textEl.textContent.length > 40) { toggleEl.style.display = 'inline'; return; }
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        if (textEl.scrollWidth > textEl.clientWidth + 2) { toggleEl.style.display = 'inline'; }
       });
-      if (!resp.ok) throw new Error('GitHub API 请求失败: ' + resp.status);
-      var data = await resp.json();
-      var latest = parseLatestRelease(data);
-      if (latest) { renderLatestCard(latest); return; }
-    } catch (e) {
-      console.warn('获取 GitHub latest release 失败，将使用本地写死数据：', e);
-    }
-    if (fallbackLatest) { renderLatestCard(fallbackLatest); }
-    else { latestCard.style.display = 'none'; }
+    });
   }
 
-  // ===== 渲染真实卡片（带淡入动画） =====
-  function renderLatestCard(latest) {
-    if (!latest) { latestCard.style.display = 'none'; return; }
+  /* ===== 自适应字号：确保单行不换行 ===== */
+  function autoFitVersionLine() {
+    var lineEl = document.querySelector('.latest-version-line');
+    if (!lineEl) return;
+    var container = lineEl.parentElement;
+    if (!container) return;
+    var availableWidth = container.clientWidth;
+    if (availableWidth <= 0) return;
 
-    // 先移除骨架屏标记
-    latestCard.classList.remove('skeleton');
+    /* 从最大字号开始尝试，逐步缩小直到不换行 */
+    var maxFontSize = 1.3;
+    var minFontSize = 0.68;
+    var step = 0.02;
+    var currentSize = maxFontSize;
+
+    lineEl.style.fontSize = currentSize + 'rem';
+
+    while (currentSize > minFontSize) {
+      if (lineEl.scrollWidth <= availableWidth + 2) break;
+      currentSize -= step;
+      lineEl.style.fontSize = currentSize + 'rem';
+    }
+  }
+
+  /* ===== 从 GitHub API 获取最新 Release ===== */
+  async function fetchLatestLauncherRelease() {
+    var apiUrl = 'https://api.github.com/repos/ModinMobileSTS/Sts2MobileLauncher/releases/latest';
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+
+    try {
+      var resp = await fetch(apiUrl, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!resp.ok) throw new Error('API 请求失败: ' + resp.status);
+      var data = await resp.json();
+
+      var result = {};
+      if (data.tag_name) result.version = data.tag_name;
+      if (data.published_at) {
+        var dt = new Date(data.published_at);
+        result.date = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+      }
+      if (data.assets && data.assets.length > 0 && data.assets[0].size) {
+        result.size = (data.assets[0].size / 1048576).toFixed(2) + 'MB';
+      }
+      if (data.body) result.description = data.body;
+
+      return result;
+    } catch (e) {
+      console.warn('获取 GitHub Release 失败，使用降级数据:', e);
+      return null;
+    }
+  }
+
+  /* ===== 渲染最新版本卡片 ===== */
+  function renderLatestCard(data) {
+    if (!data) {
+      /* API 失败时使用降级数据 */
+      data = FALLBACK_LAUNCHER_DATA;
+    }
 
     latestCard.style.display = 'flex';
     latestCard.innerHTML =
       '<img class="latest-icon" src="' + LAUNCHER_ICON + '" alt="启动器图标" onerror="this.style.display=\'none\'">' +
       '<div class="latest-info">' +
-        '<div class="latest-version">' + latest.version + ' <span class="latest-suffix">/ 最新版本 / 启动器 / ' + latest.size + '</span></div>' +
+        '<div class="latest-version-line" id="versionLine">' +
+          '<span class="latest-version" style="font-size:inherit">v' + (data.version || '-') + '</span>' +
+          '<span class="latest-version-tag"> / 最新版本 / 启动器 / ' + (data.size || '-') + '</span>' +
+        '</div>' +
         '<div class="latest-hint">* 这只是启动器 需配合游戏本体一起使用</div>' +
         '<div class="desc-wrap">' +
-          '<span class="desc-text" id="latest-desc">' + latest.description + '</span>' +
+          '<span class="desc-text" id="latest-desc">' + (data.description || '暂无更新说明') + '</span>' +
           '<span class="desc-toggle" id="latest-toggle" style="display:none;">展开</span>' +
         '</div>' +
         '<div class="latest-actions">' +
-          '<a class="btn-dl" href="' + latest.downloadUrl + '" target="_blank" rel="noopener">下载启动器</a>' +
+          '<a class="btn-dl" href="' + LAUNCHER_DL_URL + '" target="_blank" rel="noopener">下载启动器</a>' +
           '<a class="btn-tutorial" href="' + TUTORIAL_URL + '" target="_blank" rel="noopener">使用教程</a>' +
         '</div>' +
       '</div>';
 
-    // 触发淡入动画
-    latestCard.classList.remove('content-ready');
-    void latestCard.offsetWidth; // 强制重排
-    latestCard.classList.add('content-ready');
-
-    var de = document.getElementById('latest-desc'),
-        te = document.getElementById('latest-toggle');
+    var de = document.getElementById('latest-desc'), te = document.getElementById('latest-toggle');
     if (de && te) {
       checkOverflow(de, te);
       te.addEventListener('click', function() {
@@ -652,39 +598,18 @@ body {
         te.textContent = ex ? '收起' : '展开';
       });
     }
-  }
 
-  // ===== 原有逻辑（搜索、历史版本、分页等）保持不变 =====
-  function showToast(msg) {
-    clearTimeout(toastTimer);
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    toastTimer = setTimeout(function() {
-      toastEl.classList.remove('show');
-    }, 2200);
-  }
-
-  function checkOverflow(textEl, toggleEl) {
-    if (textEl.textContent.length > 40) {
-      toggleEl.style.display = 'inline';
-      return;
-    }
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        if (textEl.scrollWidth > textEl.clientWidth + 2) {
-          toggleEl.style.display = 'inline';
-        }
-      });
-    });
+    /* 自适应字号 */
+    autoFitVersionLine();
+    window.addEventListener('resize', autoFitVersionLine);
   }
 
   function getCurrentData() {
-    var data = activeTab === 'launcher' ? launcherData : gameData;
+    var data = activeTab === 'launcher' ? [] : gameData;
     var query = searchInput.value.trim().toLowerCase();
     if (query) {
       data = data.filter(function(item) {
-        return item.version.toLowerCase().indexOf(query) !== -1 ||
-               item.description.toLowerCase().indexOf(query) !== -1;
+        return item.version.toLowerCase().indexOf(query) !== -1 || item.description.toLowerCase().indexOf(query) !== -1;
       });
     }
     currentFilteredData = data;
@@ -700,8 +625,7 @@ body {
     pageData.forEach(function(item, idx) {
       var card = document.createElement('div');
       card.className = 'version-card';
-      var did = 'vd-' + activeTab + '-' + idx,
-          tid = 'vt-' + activeTab + '-' + idx;
+      var did = 'vd-' + activeTab + '-' + idx, tid = 'vt-' + activeTab + '-' + idx;
       card.innerHTML =
         '<div class="version-card-inner">' +
           '<div class="version-info">' +
@@ -718,8 +642,7 @@ body {
           '<a class="version-dl-btn" href="' + item.downloadUrl + '" target="_blank" rel="noopener">下载</a>' +
         '</div>';
       versionList.appendChild(card);
-      var de = document.getElementById(did),
-          te = document.getElementById(tid);
+      var de = document.getElementById(did), te = document.getElementById(tid);
       if (de && te) {
         (function(d, t) {
           checkOverflow(d, t);
@@ -739,39 +662,27 @@ body {
 
     function createBtn(cls, content, disabled, handler) {
       var btn = document.createElement('button');
-      btn.className = cls;
-      btn.innerHTML = content;
-      btn.style.flexShrink = '1';
-      btn.style.minWidth = '0';
+      btn.className = cls; btn.innerHTML = content;
+      btn.style.flexShrink = '1'; btn.style.minWidth = '0';
       if (disabled) btn.disabled = true;
       if (handler) btn.addEventListener('click', handler);
       return btn;
     }
-
     function createPageBtn(num) {
       return createBtn('pagination-page' + (num === currentPageNum ? ' active' : ''), num, false, function() {
-        currentPage = num;
-        renderCurrentPage();
+        currentPage = num; renderCurrentPage();
         versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
       });
     }
-
     function createDots() {
       var s = document.createElement('span');
-      s.className = 'pagination-dots';
-      s.textContent = '...';
-      s.style.flexShrink = '1';
-      s.style.minWidth = '0';
-      return s;
+      s.className = 'pagination-dots'; s.textContent = '...';
+      s.style.flexShrink = '1'; s.style.minWidth = '0'; return s;
     }
 
     var items = [];
     items.push(createBtn('pagination-btn', '&#8249;', currentPageNum <= 1, function() {
-      if (currentPage > 1) {
-        currentPage--;
-        renderCurrentPage();
-        versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
-      }
+      if (currentPage > 1) { currentPage--; renderCurrentPage(); versionList.scrollIntoView({behavior:'smooth',block:'start'}); }
     }));
     items.push(createPageBtn(1));
     if (totalPages <= 4) {
@@ -779,46 +690,29 @@ body {
     } else {
       if (currentPageNum <= 4) {
         for (var j = 2; j <= 4; j++) items.push(createPageBtn(j));
-        items.push(createDots());
-        items.push(createPageBtn(totalPages));
+        items.push(createDots()); items.push(createPageBtn(totalPages));
       } else {
         items.push(createDots());
         if (currentPageNum - 1 > 1) items.push(createPageBtn(currentPageNum - 1));
         items.push(createPageBtn(currentPageNum));
         if (currentPageNum + 1 < totalPages) items.push(createPageBtn(currentPageNum + 1));
-        items.push(createDots());
-        items.push(createPageBtn(totalPages));
+        items.push(createDots()); items.push(createPageBtn(totalPages));
       }
     }
     items.push(createBtn('pagination-btn', '&#8250;', currentPageNum >= totalPages, function() {
-      if (currentPage < totalPages) {
-        currentPage++;
-        renderCurrentPage();
-        versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
-      }
+      if (currentPage < totalPages) { currentPage++; renderCurrentPage(); versionList.scrollIntoView({behavior:'smooth',block:'start'}); }
     }));
-
-    items.forEach(function(it) {
-      paginationEl.appendChild(it);
-    });
+    items.forEach(function(it) { paginationEl.appendChild(it); });
 
     var gw = document.createElement('span');
-    gw.className = 'pagination-goto';
-    gw.style.flexShrink = '0';
-    gw.style.marginLeft = '8px';
-
+    gw.className = 'pagination-goto'; gw.style.flexShrink = '0'; gw.style.marginLeft = '8px';
     var gi = document.createElement('input');
-    gi.type = 'text';
-    gi.className = 'pagination-goto-input';
-    gi.placeholder = '\\';
-    gi.maxLength = 3;
-    gi.setAttribute('aria-label', '输入页码');
-
+    gi.type = 'text'; gi.className = 'pagination-goto-input';
+    gi.placeholder = '\\'; gi.maxLength = 3; gi.setAttribute('aria-label', '输入页码');
     var gb = document.createElement('button');
     gb.className = 'pagination-goto-btn';
     gb.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" style="width:18px;height:18px"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
     gb.setAttribute('aria-label', '跳转到指定页');
-
     var gm = document.createElement('button');
     gm.className = 'pagination-goto-mobile-trigger';
     gm.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:14px;height:14px"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
@@ -826,92 +720,44 @@ body {
 
     function doGoto(v) {
       var n = parseInt(v, 10);
-      if (isNaN(n) || n < 1 || n > totalPages) {
-        showToast('页码范围：1 ~ ' + totalPages);
-        return;
-      }
-      currentPage = n;
-      renderCurrentPage();
-      gi.value = '';
-      versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
+      if (isNaN(n) || n < 1 || n > totalPages) { showToast('页码范围：1 ~ ' + totalPages); return; }
+      currentPage = n; renderCurrentPage(); gi.value = '';
+      versionList.scrollIntoView({behavior:'smooth',block:'start'});
     }
-
-    gi.addEventListener('input', function() {
-      this.value = this.value.replace(/[^\d]/g, '').slice(0, 3);
-    });
-    gi.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') doGoto(this.value);
-    });
-    gb.addEventListener('click', function() {
-      doGoto(gi.value);
-    });
-    gm.addEventListener('click', function() {
-      openGotoPopup(totalPages);
-    });
-
-    gw.appendChild(gi);
-    gw.appendChild(gb);
-    gw.appendChild(gm);
+    gi.addEventListener('input', function() { this.value = this.value.replace(/[^\d]/g, '').slice(0, 3); });
+    gi.addEventListener('keydown', function(e) { if (e.key === 'Enter') doGoto(this.value); });
+    gb.addEventListener('click', function() { doGoto(gi.value); });
+    gm.addEventListener('click', function() { openGotoPopup(totalPages); });
+    gw.appendChild(gi); gw.appendChild(gb); gw.appendChild(gm);
     paginationEl.appendChild(gw);
   }
 
   function openGotoPopup(totalPages) {
-    var ex = document.getElementById('gotoPopupOverlay');
-    if (ex) ex.remove();
+    var ex = document.getElementById('gotoPopupOverlay'); if (ex) ex.remove();
     var ol = document.createElement('div');
-    ol.className = 'goto-popup-overlay active';
-    ol.id = 'gotoPopupOverlay';
-    var pp = document.createElement('div');
-    pp.className = 'goto-popup';
-    var tt = document.createElement('div');
-    tt.className = 'goto-popup-title';
+    ol.className = 'goto-popup-overlay active'; ol.id = 'gotoPopupOverlay';
+    var pp = document.createElement('div'); pp.className = 'goto-popup';
+    var tt = document.createElement('div'); tt.className = 'goto-popup-title';
     tt.textContent = '跳转到第几页？(共 ' + totalPages + ' 页)';
-    var rw = document.createElement('div');
-    rw.className = 'goto-popup-row';
+    var rw = document.createElement('div'); rw.className = 'goto-popup-row';
     var ip = document.createElement('input');
-    ip.type = 'text';
-    ip.className = 'goto-popup-input';
-    ip.placeholder = '页码';
-    ip.maxLength = 3;
-    ip.inputMode = 'numeric';
-    ip.addEventListener('input', function() {
-      this.value = this.value.replace(/[^\d]/g, '').slice(0, 3);
-    });
-    var cb = document.createElement('button');
-    cb.className = 'goto-popup-confirm';
-    cb.textContent = '跳转';
-
+    ip.type = 'text'; ip.className = 'goto-popup-input'; ip.placeholder = '页码';
+    ip.maxLength = 3; ip.inputMode = 'numeric';
+    ip.addEventListener('input', function() { this.value = this.value.replace(/[^\d]/g, '').slice(0, 3); });
+    var cb = document.createElement('button'); cb.className = 'goto-popup-confirm'; cb.textContent = '跳转';
     function doG() {
       var n = parseInt(ip.value, 10);
-      if (isNaN(n) || n < 1 || n > totalPages) {
-        showToast('页码范围：1 ~ ' + totalPages);
-        return;
-      }
-      currentPage = n;
-      renderCurrentPage();
-      ol.remove();
-      setTimeout(function() {
-        versionList.scrollIntoView({behavior: 'smooth', block: 'start'});
-      }, 50);
+      if (isNaN(n) || n < 1 || n > totalPages) { showToast('页码范围：1 ~ ' + totalPages); return; }
+      currentPage = n; renderCurrentPage(); ol.remove();
+      setTimeout(function() { versionList.scrollIntoView({behavior:'smooth',block:'start'}); }, 50);
     }
-
-    ip.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') doG();
-    });
+    ip.addEventListener('keydown', function(e) { if (e.key === 'Enter') doG(); });
     cb.addEventListener('click', doG);
-    ol.addEventListener('click', function(e) {
-      if (e.target === ol) ol.remove();
-    });
-
-    rw.appendChild(ip);
-    rw.appendChild(cb);
-    pp.appendChild(tt);
-    pp.appendChild(rw);
-    ol.appendChild(pp);
-    document.body.appendChild(ol);
-    setTimeout(function() {
-      ip.focus();
-    }, 100);
+    ol.addEventListener('click', function(e) { if (e.target === ol) ol.remove(); });
+    rw.appendChild(ip); rw.appendChild(cb);
+    pp.appendChild(tt); pp.appendChild(rw);
+    ol.appendChild(pp); document.body.appendChild(ol);
+    setTimeout(function() { ip.focus(); }, 100);
   }
 
   function renderCurrentPage() {
@@ -922,36 +768,21 @@ body {
   }
 
   function switchTab(tab) {
-    activeTab = tab;
-    currentPage = 1;
-    searchInput.value = '';
-    searchDropdown.classList.remove('active');
+    activeTab = tab; currentPage = 1;
+    searchInput.value = ''; searchDropdown.classList.remove('active');
     tabLauncher.classList.toggle('active', tab === 'launcher');
     tabGame.classList.toggle('active', tab === 'game');
     renderCurrentPage();
   }
 
-  tabLauncher.addEventListener('click', function() {
-    switchTab('launcher');
-  });
-  tabGame.addEventListener('click', function() {
-    switchTab('game');
-  });
+  tabLauncher.addEventListener('click', function() { switchTab('launcher'); });
+  tabGame.addEventListener('click', function() { switchTab('game'); });
 
   function updateSearchDropdown() {
     var query = searchInput.value.trim();
     searchDropdown.innerHTML = '';
-    if (!query) {
-      searchDropdown.classList.remove('active');
-      return;
-    }
-    var lq = query.toLowerCase(),
-        results = [];
-    launcherData.forEach(function(item) {
-      if (item.version.toLowerCase().indexOf(lq) !== -1 || item.description.toLowerCase().indexOf(lq) !== -1) {
-        results.push({item: item, type: 'launcher', typeName: '启动器'});
-      }
-    });
+    if (!query) { searchDropdown.classList.remove('active'); return; }
+    var lq = query.toLowerCase(), results = [];
     gameData.forEach(function(item) {
       if (item.version.toLowerCase().indexOf(lq) !== -1 || item.description.toLowerCase().indexOf(lq) !== -1) {
         results.push({item: item, type: 'game', typeName: '游戏本体'});
@@ -960,24 +791,16 @@ body {
     if (results.length === 0) {
       searchDropdown.innerHTML = '<li class="search-dropdown-empty">没有找到匹配的版本</li>';
     } else {
-      var eq = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-          rx = new RegExp('(' + eq + ')', 'gi');
+      var eq = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), rx = new RegExp('(' + eq + ')', 'gi');
       results.slice(0, 8).forEach(function(r) {
-        var li = document.createElement('li');
-        li.className = 'search-dropdown-item';
+        var li = document.createElement('li'); li.className = 'search-dropdown-item';
         li.innerHTML = '<span class="search-item-type ' + r.type + '">' + r.typeName + '</span><span>' + r.item.version.replace(rx, '<mark>$1</mark>') + '</span>';
         li.addEventListener('click', function() {
           if (activeTab !== r.type) switchTab(r.type);
-          searchInput.value = '';
-          searchDropdown.classList.remove('active');
-          var fd = activeTab === 'launcher' ? launcherData : gameData;
+          searchInput.value = ''; searchDropdown.classList.remove('active');
+          var fd = gameData;
           var idx = -1;
-          for (var i = 0; i < fd.length; i++) {
-            if (fd[i].version === r.item.version) {
-              idx = i;
-              break;
-            }
-          }
+          for (var i = 0; i < fd.length; i++) { if (fd[i].version === r.item.version) { idx = i; break; } }
           if (idx !== -1) {
             currentPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
             renderCurrentPage();
@@ -986,10 +809,8 @@ body {
               var ci = idx % ITEMS_PER_PAGE;
               if (cards[ci]) {
                 cards[ci].style.boxShadow = '0 0 0 3px var(--sm), var(--sd)';
-                cards[ci].scrollIntoView({behavior: 'smooth', block: 'center'});
-                setTimeout(function() {
-                  cards[ci].style.boxShadow = '';
-                }, 2000);
+                cards[ci].scrollIntoView({behavior:'smooth', block:'center'});
+                setTimeout(function() { cards[ci].style.boxShadow = ''; }, 2000);
               }
             }, 100);
           }
@@ -1001,29 +822,27 @@ body {
   }
 
   searchInput.addEventListener('input', function() {
-    currentPage = 1;
-    renderCurrentPage();
-    updateSearchDropdown();
+    currentPage = 1; renderCurrentPage(); updateSearchDropdown();
   });
   searchInput.addEventListener('focus', function() {
     if (searchInput.value.trim().length >= 1) updateSearchDropdown();
   });
   searchInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      searchDropdown.classList.remove('active');
-      searchInput.blur();
-    }
+    if (e.key === 'Escape') { searchDropdown.classList.remove('active'); searchInput.blur(); }
     if (e.key === 'Enter') searchDropdown.classList.remove('active');
   });
   document.addEventListener('click', function(e) {
     if (!searchContainer.contains(e.target)) searchDropdown.classList.remove('active');
   });
 
-  // ===== 初始化 =====
-  renderLatestCardSkeleton();       // 1. 立即显示骨架屏
-  renderCurrentPage();               // 2. 渲染历史版本
-  fetchAndRenderLatestRelease();     // 3. 异步拉取 GitHub 数据后替换骨架屏
+  /* ===== 页面初始化：先显示骨架屏，再异步获取数据 ===== */
+  async function initLatestCard() {
+    var releaseData = await fetchLatestLauncherRelease();
+    renderLatestCard(releaseData);
+  }
 
+  initLatestCard();
+  renderCurrentPage();
 })();
 </script>
 </body>
