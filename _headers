@@ -1,0 +1,9 @@
+
+/resources/css/*
+  Cache-Control: no-cache
+
+/resources/js/*
+  Cache-Control: no-cache
+
+/resources/json/post/**/*.json
+  Cache-Control: no-store, no-cache, must-revalidate
