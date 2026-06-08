@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加入玩家群，一起交流 MOD 与疑问解答</title>
+    <meta name="referrer" content="no-referrer">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f3f0;
+            color: #2d2a26;
+            min-height: 100vh;
+            line-height: 1.6;
+            padding: 48px 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #8a8279;
+            font-weight: 400;
+            letter-spacing: 0.04em;
+        }
+
+        .group-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .group-card {
+            background: #fff;
+            border: 1px solid #e8e4de;
+            border-radius: 16px;
+            padding: 22px;
+            width: 100%;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            text-align: left;
+            box-shadow: 0 1px 2px rgba(60,50,40,0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .group-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(60,50,40,0.08);
+            border-color: #ddd7ce;
+        }
+
+        .group-card--channel {
+            background: #fcfbfa;
+            border-color: #ebe7e0;
+        }
+
+        .group-card--channel:hover {
+            border-color: #e0dbd2;
+        }
+
+        .avatar-wrap {
+            flex-shrink: 0;
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f0ece4;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .avatar-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #c5bdb0;
+            font-weight: 600;
+        }
+
+        .group-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 2px;
+        }
+
+        .group-name-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .group-name {
+            font-weight: 650;
+            font-size: 0.95rem;
+            color: #2d2a26;
+            letter-spacing: 0.01em;
+        }
+
+        .group-badge {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: #fdf1ec;
+            color: #c46a50;
+            letter-spacing: 0.02em;
+        }
+
+        .group-card--channel .group-badge {
+            background: #f3f0ea;
+            color: #8a7e6e;
+        }
+
+        .hint-sub {
+            font-size: 0.82rem;
+            color: #c08a70;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            line-height: 1.4;
+        }
+
+        .group-meta {
+            font-size: 0.86rem;
+            color: #6b645b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .group-meta .label {
+            color: #a09888;
+            font-size: 0.8rem;
+        }
+
+        .group-meta .number {
+            font-weight: 600;
+            color: #4a4540;
+            font-family: 'SF Mono', 'JetBrains Mono', 'Consolas', 'Menlo', 'PingFang SC', monospace;
+            letter-spacing: 0.02em;
+            font-size: 0.88rem;
+        }
+
+        .answer-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            background: #fdf8f5;
+            border-radius: 10px;
+            border: 1px solid #f0e6de;
+            align-self: flex-start;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+            user-select: none;
+        }
+
+        .answer-row:hover {
+            background: #faf0ea;
+            border-color: #e5d5cc;
+        }
+
+        .answer-row:active {
+            transform: scale(0.98);
+        }
+
+        .answer-label {
+            font-size: 0.78rem;
+            color: #b09888;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .answer-code {
+            font-family: 'SF Mono', 'JetBrains Mono', 'Consolas', 'Menlo', 'PingFang SC', monospace;
+            font-weight: 700;
+            color: #b86b52;
+            font-size: 0.92rem;
+            letter-spacing: 0.06em;
+        }
+
+        .action-area {
+            flex-shrink: 0;
+            padding-top: 4px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 9px 18px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .btn-copy {
+            background: #d4846a;
+            color: #fff;
+            box-shadow: 0 1px 3px rgba(180,100,70,0.15);
+        }
+
+        .btn-copy:hover {
+            background: #c2735a;
+            box-shadow: 0 3px 10px rgba(180,100,70,0.2);
+        }
+
+        .btn-copy:active {
+            transform: scale(0.97);
+        }
+
+        .btn-link {
+            background: #8a7e6e;
+            color: #fff;
+            box-shadow: 0 1px 3px rgba(100,90,80,0.12);
+        }
+
+        .btn-link:hover {
+            background: #7d7162;
+            box-shadow: 0 3px 10px rgba(100,90,80,0.18);
+        }
+
+        .btn-link:active {
+            transform: scale(0.97);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #fff;
+            border: 1px solid #e5e0d8;
+            border-radius: 12px;
+            padding: 10px 22px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #3b3733;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .back-link-wrap {
+            margin-top: 36px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            text-decoration: none;
+            color: #8e8578;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .back-link:hover {
+            background: #fff;
+            color: #5a544d;
+            border-color: #e5e0d8;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 28px 12px; }
+            .group-card { padding: 18px; gap: 14px; }
+            .avatar-wrap { width: 48px; height: 48px; border-radius: 12px; }
+            .group-name { font-size: 0.9rem; }
+            .btn { padding: 8px 16px; font-size: 0.8rem; }
+            .answer-row { padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <p class="subtitle">加入玩家群，一起交流 MOD 与疑问解答</p>
+        </div>
+
+        <div class="group-list" id="groupList"></div>
+
+        <div class="back-link-wrap">
+            <a href="../../index.html" class="back-link">&larr; 返回 MOD 站首页</a>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        (function() {
+            const groups = [
+                {
+                    name: '杀戮尖塔2 移植版交流群',
+                    badge: '一群',
+                    number: '1101853266',
+                    avatar: 'https://p.qlogo.cn/gh/1101853266/1101853266/0',
+                    active: true,
+                    type: 'group',
+                    hint: '如果群满了可以加频道',
+                    answer: '_冬雪寒'
+                },
+                {
+                    name: '杀戮尖塔2 移植版交流频道',
+                    badge: '频道',
+                    number: 'pd52310485',
+                    link: 'https://pd.qq.com/s/18petknya?b=9',
+                    answer: '_冬雪寒',
+                    avatar: 'https://p.qlogo.cn/gh/1101853266/1101853266/0',
+                    active: true,
+                    type: 'channel'
+                }
+            ];
+
+            const groupList = document.getElementById('groupList');
+            const toast = document.getElementById('toast');
+
+            function renderGroups() {
+                groupList.innerHTML = '';
+                groups.forEach((group) => {
+                    const card = document.createElement('div');
+                    card.className = 'group-card' + (group.type === 'channel' ? ' group-card--channel' : '');
+
+                    const avatarWrap = document.createElement('div');
+                    avatarWrap.className = 'avatar-wrap';
+                    if (group.avatar && group.active) {
+                        const img = document.createElement('img');
+                        img.className = 'avatar-img';
+                        img.src = group.avatar;
+                        img.alt = group.name;
+                        img.loading = 'lazy';
+                        img.onerror = () => {
+                            avatarWrap.innerHTML = '<div class="avatar-fallback">?</div>';
+                        };
+                        avatarWrap.appendChild(img);
+                    } else {
+                        avatarWrap.innerHTML = '<div class="avatar-fallback">?</div>';
+                    }
+
+                    const info = document.createElement('div');
+                    info.className = 'group-info';
+
+                    const nameRow = document.createElement('div');
+                    nameRow.className = 'group-name-row';
+
+                    const nameEl = document.createElement('span');
+                    nameEl.className = 'group-name';
+                    nameEl.textContent = group.name;
+
+                    const badgeEl = document.createElement('span');
+                    badgeEl.className = 'group-badge';
+                    badgeEl.textContent = group.badge;
+
+                    nameRow.appendChild(nameEl);
+                    nameRow.appendChild(badgeEl);
+
+                    info.appendChild(nameRow);
+
+                    if (group.hint) {
+                        const hintEl = document.createElement('div');
+                        hintEl.className = 'hint-sub';
+                        hintEl.textContent = group.hint;
+                        info.appendChild(hintEl);
+                    }
+
+                    const metaRow = document.createElement('div');
+                    metaRow.className = 'group-meta';
+                    metaRow.innerHTML = '<span class="label">' + (group.type === 'channel' ? '频道号' : '群号') + '</span><span class="number">' + escapeHtml(group.number || '暂无') + '</span>';
+                    info.appendChild(metaRow);
+
+                    if (group.answer) {
+                        const answerRow = document.createElement('div');
+                        answerRow.className = 'answer-row';
+                        answerRow.innerHTML = '<span class="answer-label">验证答案</span><span class="answer-code">' + escapeHtml(group.answer) + '</span>';
+                        answerRow.addEventListener('click', () => {
+                            copyToClipboard(group.answer, '答案已复制');
+                        });
+                        info.appendChild(answerRow);
+                    }
+
+                    const actionArea = document.createElement('div');
+                    actionArea.className = 'action-area';
+
+                    if (group.active && group.type === 'group' && group.number) {
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'btn btn-copy';
+                        copyBtn.textContent = '复制群号';
+                        copyBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            copyToClipboard(group.number, '群号已复制，快去粘贴加群吧！');
+                        };
+                        actionArea.appendChild(copyBtn);
+                    } else if (group.active && group.type === 'channel' && group.link) {
+                        const linkBtn = document.createElement('a');
+                        linkBtn.className = 'btn btn-link';
+                        linkBtn.href = group.link;
+                        linkBtn.target = '_blank';
+                        linkBtn.rel = 'noopener noreferrer';
+                        linkBtn.textContent = '进入频道';
+                        actionArea.appendChild(linkBtn);
+                    }
+
+                    card.appendChild(avatarWrap);
+                    card.appendChild(info);
+                    card.appendChild(actionArea);
+                    groupList.appendChild(card);
+                });
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function copyToClipboard(text, message) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast(message);
+                    }).catch(() => {
+                        fallbackCopy(text, message);
+                    });
+                } else {
+                    fallbackCopy(text, message);
+                }
+            }
+
+            function fallbackCopy(text, message) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast(message);
+                } catch (err) {
+                    showToast('复制失败，请手动复制');
+                }
+                document.body.removeChild(textarea);
+            }
+
+            let toastTimer;
+            function showToast(message) {
+                clearTimeout(toastTimer);
+                toast.textContent = message;
+                toast.classList.add('show');
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            }
+
+            renderGroups();
+        })();
+    </script>
+</body>
+</html>

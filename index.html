@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>杀戮尖塔2娘化MOD站 - 编辑器</title>
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="img-src * data:;">
+    <style>
+
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #faf7f4; z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .loading-gif {
+            display: none;
+        }
+        .loading-spinner-main {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2dbd0;
+            border-top-color: #e89b9b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        .loading-text {
+            display: block;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-size: 1.1rem; color: #6b6378;
+            animation: loadingPulse 1.5s ease-in-out infinite;
+            margin-top: 10px;
+        }
+        .loading-spinner {
+            display: inline-block; width: 1em; height: 1em;
+            border: 2px solid #6b6378; border-top-color: transparent;
+            border-radius: 50%; margin-left: 8px;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+        @keyframes loadingPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .main-container {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+    </style>
+    <link rel="stylesheet" href="resources/css/style.css?v=20260531">
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner-main" id="potionWrapper"></div>
+        <img id="loadingGif" class="loading-gif" alt="加载中" style="display:none;">
+        <p class="loading-text" id="loadingText">正在加载...马上就好 <span class="loading-spinner"></span></p>
+    </div>
+
+    <div class="main-container" id="mainContent">
+        <header class="header">
+            <div class="logo-area" id="logoArea">
+                <img alt="鸡煲立绘" class="logo-img" id="logoImg" style="display:none;" onerror="this.style.display='none'; document.getElementById('logoTower').style.display='flex';">
+                <div class="logo-tower" id="logoTower" style="display:flex;">
+                    <div class="logo-layer"></div><div class="logo-layer"></div><div class="logo-layer"></div>
+                </div>
+                <span class="logo-title">STS2娘化MOD站</span>
+            </div>
+            <div class="search-wrapper">
+                <div class="search-container" id="searchContainer">
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜索MOD名、标签，或输入 RID / rid:123" autocomplete="off">
+                    <span class="search-mascot"></span>
+                    <ul class="search-dropdown" id="searchDropdown"></ul>
+                </div>
+                <div class="category-tags" id="categoryTags">
+                    <span class="category-tag active" data-category="all">MOD资源</span>
+                    <span class="category-tag" data-category="skin">O.o的网盘</span>
+                </div>
+            </div>
+        </header>
+        <section class="quick-actions">
+            <a href="https://b23.tv/RlzpOlN" class="quick-card"><span class="quick-card-title">新手必看</span><span class="quick-card-desc">MOD安装教程 Android</span></a>
+            <a href="https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6ff4808d61df457683091bb528f95d15?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D" class="quick-card"><span class="quick-card-title">塔Ⅱ手机版</span><span class="quick-card-desc">实时追踪最新版<br>@wsdx233</span></a>
+            <a href="https://qm.qq.com/q/n6K1vxQyPe" class="quick-card"><span class="quick-card-title">问题反馈</span><span class="quick-card-desc">资源失效？点这里告诉管理员</span></a>
+            <a href="resources/group/group.html" class="quick-card"><span class="quick-card-title">玩家交流</span><span class="quick-card-desc">加入玩家群，一起交流MOD</span></a>
+        </section>
+        <section>
+            <h2 class="mod-section-title">精选MOD资源</h2>
+            <div class="mod-grid" id="modGrid"></div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+        <footer class="footer"><p>STS2娘化MOD站 © 2026 壹个屑猫猫</p></footer>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div class="modal-content" id="modalContent">
+            <h2 class="modal-title" id="modalTitle"></h2>
+                        <div class="modal-cover-wrap" id="modalCoverWrap" style="display:none;">
+                <img class="modal-cover-img" id="modalCoverImg" alt="MOD封面">
+            </div>
+                <div class="modal-rid-wrap" id="modalRidWrap">
+                <div class="modal-rid" id="modalRid" title="点击复制 RID"></div>
+                <div class="rid-dropdown" id="ridDropdown" style="display:none;">
+                    <button class="rid-option" data-action="copy-rid">复制 RID</button>
+                    <button class="rid-option" data-action="copy-link">复制帖子链接</button>
+                </div>
+            </div>
+            <div class="modal-tags" id="modalTags"></div>
+            <div class="modal-description">
+                <div class="desc-text" id="modalDescText"></div>
+                <span class="desc-toggle" id="descToggle" style="display:none;">展开全文</span>
+            </div>
+            <p class="modal-author" id="modalAuthor"></p>
+            <div class="author-links-section">
+                <span class="author-links-label">作者主页：</span>
+                <div class="modal-links" id="modalLinks"></div>
+            </div>
+            <div class="download-section">
+                <span class="author-links-label">MOD下载：</span>
+                <div class="download-buttons" id="downloadButtons"></div>
+            </div>
+            <div class="preview-section">
+                <div class="preview-toggles">
+                    <button class="preview-toggle" id="previewImagesBtn">预览图片 ▾</button>
+                    <button class="preview-toggle" id="previewVideosBtn">预览视频 ▾</button>
+                </div>
+                <div class="preview-content-area" id="previewContentArea"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="lightbox-overlay" id="lightboxOverlay">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <img class="lightbox-img" id="lightboxImg" alt="查看大图">
+    </div>
+
+    <div class="chara-overlay" id="charaOverlay">
+        <button class="chara-close" id="charaClose">&times;</button>
+        <div class="chara-modal">
+            <div class="chara-image-wrap">
+                <img id="charaImg" alt="鸡煲立绘">
+            </div>
+            <h2 class="chara-name">故障机器人（鸡煲）</h2>
+            <div class="chara-details">
+                <p><strong>性别：</strong>未知</p>
+                <p><strong>年龄：</strong>千年机体</p>
+                <p><strong>画师：</strong>anaertailin（A大）</p>
+                <p><strong>规格：</strong>全身立绘，透明底，尺寸722×1420</p>
+                <p><strong>原图来源：</strong><a href="https://www.ifdian.net/album/c125877626ff11eea47652540025c377/6e1abe8c6c2011eea7b752540025c377?utm_source=copylink&utm_medium=link" target="_blank" rel="noopener noreferrer">爱发电原贴</a></p>
+            </div>
+            <p class="chara-desc">一具产生了自我意识的战斗型机器人。它装载的远古科技让它可以操控充能球。</p>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- ===== 编辑模式 UI ===== -->
+    <button class="edit-fab" id="editFab" title="编辑模式 (Ctrl+Shift+E)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </button>
+    <div class="edit-toolbar" id="editToolbar" style="display:none;">
+        <span class="edit-toolbar-label">编辑模式</span>
+        <div class="edit-toolbar-actions">
+            <button class="et-btn et-btn--add" id="editAddMod">+ 添加新MOD</button>
+            <span class="et-sep"></span>
+            <button class="et-btn" id="editSelectAll">全选</button>
+            <button class="et-btn" id="editDeselectAll">取消全选</button>
+            <button class="et-btn et-btn--accent" id="editExportSelected" disabled>导出选中</button>
+            <button class="et-btn et-btn--accent" id="editExportAll">导出全部ZIP</button>
+            <button class="et-btn" id="editImportJSON">导入JSON</button>
+            <button class="et-btn" id="editImportZip">导入ZIP</button>
+            <button class="et-btn" id="editFileList">文件列表</button>
+            <span class="et-sep"></span>
+            <button class="et-btn" id="editSaveLocal">保存到本地</button>
+            <button class="et-btn" id="editLoadLocal">从本地还原</button>
+            <button class="et-btn et-btn--warn" id="editClearData">重置编辑</button>
+            <span class="et-sep"></span>
+            <button class="et-btn et-btn--collapse" id="editCollapse" title="收起工具栏">收起 ▴</button>
+            <button class="et-btn et-btn--exit" id="editExit">退出编辑</button>
+        </div>
+    </div>
+    <button class="edit-toolbar-mini" id="editToolbarMini" style="display:none;" title="展开编辑工具栏">编辑模式 ▾</button>
+
+
+    <!-- 文件列表侧边栏 -->
+    <div class="edit-sidebar" id="editSidebar">
+        <div class="edit-sidebar-header">
+            <span class="edit-sidebar-title">文件列表</span>
+            <button class="edit-sidebar-close" id="editSidebarClose">&times;</button>
+        </div>
+        <div class="edit-sidebar-list" id="editSidebarList">
+            <div class="edit-sidebar-loading">加载中...</div>
+        </div>
+        <div class="edit-sidebar-footer">
+            <button class="et-btn et-btn--accent" id="editSidebarExportZip" style="width:100%;">导出全部ZIP</button>
+        </div>
+    </div>
+
+    <div class="edit-popup-overlay" id="editPopupOverlay" style="display:none;">
+        <div class="edit-popup" id="editPopup">
+            <h4 class="edit-popup-title" id="editPopupTitle">输入</h4>
+            <input type="text" class="edit-popup-input" id="editPopupInput" autocomplete="off">
+            <div class="edit-popup-actions">
+                <button class="edit-popup-btn edit-popup-btn--cancel" id="editPopupCancel">取消</button>
+                <button class="edit-popup-btn edit-popup-btn--confirm" id="editPopupConfirm">确定</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="resources/js/main.js?v=20260531" defer></script>
+</body>
+</html>
