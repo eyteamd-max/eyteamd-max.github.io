@@ -1,49 +1,205 @@
-(function() {
 
-  function raceImage(urls, timeout = 3500) {
+(function () {
+  // ===== 视频/图片加载队列（保留原站） =====
+  var VideoLoadQueue = {
+    maxConcurrent: 2,
+    running: 0,
+    queue: [],
+    taskIdCounter: 0,
+    activeTasks: {},
+    enqueue: function (taskFn) {
+      var taskId = ++this.taskIdCounter;
+      var self = this;
+      return new Promise(function (resolve, reject) {
+        self.activeTasks[taskId] = { resolve: resolve, reject: reject, cancelled: false };
+        self.queue.push({
+          taskId: taskId,
+          run: function () {
+            if (!self.activeTasks[taskId] || self.activeTasks[taskId].cancelled) {
+              delete self.activeTasks[taskId];
+              self.running--;
+              self._next();
+              return;
+            }
+            taskFn().then(function (result) {
+              if (!self.activeTasks[taskId]) { self.running--; self._next(); return; }
+              if (self.activeTasks[taskId].cancelled) { delete self.activeTasks[taskId]; self.running--; self._next(); return; }
+              self.activeTasks[taskId].resolve(result);
+              delete self.activeTasks[taskId];
+              self.running--;
+              self._next();
+            }).catch(function (err) {
+              if (!self.activeTasks[taskId]) { self.running--; self._next(); return; }
+              if (self.activeTasks[taskId].cancelled) { delete self.activeTasks[taskId]; self.running--; self._next(); return; }
+              self.activeTasks[taskId].reject(err);
+              delete self.activeTasks[taskId];
+              self.running--;
+              self._next();
+            });
+          }
+        });
+        self._next();
+      });
+    },
+    _next: function () {
+      while (this.running < this.maxConcurrent && this.queue.length > 0) {
+        var task = this.queue.shift();
+        this.running++;
+        task.run();
+      }
+    },
+    cancelAll: function () {
+      this.queue = [];
+      for (var id in this.activeTasks) {
+        if (this.activeTasks.hasOwnProperty(id)) {
+          this.activeTasks[id].cancelled = true;
+        }
+      }
+    }
+  };
+
+  var ImageLoadQueue = {
+    maxConcurrent: 4,
+    running: 0,
+    queue: [],
+    enqueue: function (taskFn) {
+      var self = this;
+      return new Promise(function (resolve, reject) {
+        self.queue.push({ fn: taskFn, resolve: resolve, reject: reject });
+        self._next();
+      });
+    },
+    _next: function () {
+      var self = this;
+      while (self.running < self.maxConcurrent && self.queue.length > 0) {
+        var item = self.queue.shift();
+        self.running++;
+        item.fn().then(function (result) {
+          item.resolve(result);
+          self.running--;
+          self._next();
+        }).catch(function (err) {
+          item.reject(err);
+          self.running--;
+          self._next();
+        });
+      }
+    }
+  };
+
+  var pendingVideos = [];
+  var videoLoadGeneration = 0;
+  var renderSessionId = 0;
+
+  function cleanupPendingVideos() {
+    if (pendingVideos.length === 0) return;
+    var videos = pendingVideos.slice();
+    pendingVideos = [];
+    videos.forEach(function (v) {
+      v.onloadedmetadata = v.onloadeddata = v.onerror = null;
+      v.removeAttribute('src');
+      v.load();
+    });
+  }
+
+  function raceImage(urls, timeout) {
+    timeout = timeout || 3500;
     if (!urls || urls.length === 0) return Promise.reject('no urls');
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('image load timeout')), timeout));
-    const loadPromises = urls.map(url => new Promise((resolve, reject) => {
-      const img = new Image();
-      const stallTimer = setTimeout(() => reject(new Error('image load stalled')), timeout + 2000);
-      img.onload = img.onerror = (e) => {
-        clearTimeout(stallTimer);
-        if (e.type === 'load') resolve(url);
-        else reject(new Error('image load failed'));
-      };
-      img.src = url;
-    }));
+
+    var timeoutPromise = new Promise(function (_, reject) {
+      setTimeout(function () {
+        reject(new Error('image load timeout'));
+      }, timeout);
+    });
+
+    var loadPromises = urls.map(function (url) {
+      return new Promise(function (resolve, reject) {
+        var img = new Image();
+        var stallTimer = setTimeout(function () {
+          reject(new Error('image load stalled'));
+        }, timeout + 2000);
+
+        img.onload = img.onerror = function (e) {
+          clearTimeout(stallTimer);
+          if (e.type === 'load') resolve(url);
+          else reject(new Error('image load failed'));
+        };
+
+        img.src = url;
+      });
+    });
+
     return Promise.race([
-      Promise.any([timeoutPromise, ...loadPromises]),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('total timeout')), timeout + 3000))
+      Promise.any([timeoutPromise].concat(loadPromises)),
+      new Promise(function (_, reject) {
+        setTimeout(function () {
+          reject(new Error('total timeout'));
+        }, timeout + 3000);
+      })
     ]);
   }
 
   function raceVideo(urls) {
     if (!urls || urls.length === 0) return Promise.reject('no urls');
-    const videos = [];
-    const promises = urls.map(url => new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.preload = 'auto';
-      video.muted = true;
-      video.playsInline = true;
-      const timer = setTimeout(() => reject(new Error('video load stalled')), 8000);
-      video.onloadeddata = () => { clearTimeout(timer); resolve({ url, video }); };
-      video.onerror = () => { clearTimeout(timer); reject(new Error('video load failed')); };
-      video.src = url;
-      videos.push(video);
-    }));
-    return Promise.any(promises).then(result => {
-      videos.forEach(v => {
-        if (v !== result.video) { v.onloadeddata = v.onerror = null; v.src = ''; v.load(); }
+
+    var videos = [];
+    var promises = urls.map(function (url) {
+      return new Promise(function (resolve, reject) {
+        var video = document.createElement('video');
+        video.preload = 'metadata';
+        video.muted = true;
+        video.playsInline = true;
+
+        var timer = setTimeout(function () {
+          var pIdx = pendingVideos.indexOf(video);
+          if (pIdx !== -1) pendingVideos.splice(pIdx, 1);
+          reject(new Error('video load stalled'));
+        }, 5000);
+
+        video.onloadedmetadata = function () {
+          clearTimeout(timer);
+          var pIdx = pendingVideos.indexOf(video);
+          if (pIdx !== -1) pendingVideos.splice(pIdx, 1);
+          resolve({ url: url, video: video });
+        };
+        video.onerror = function () {
+          clearTimeout(timer);
+          var pIdx = pendingVideos.indexOf(video);
+          if (pIdx !== -1) pendingVideos.splice(pIdx, 1);
+          reject(new Error('video load failed'));
+        };
+
+        video.src = url;
+        videos.push(video);
+        pendingVideos.push(video);
       });
-      const cleanVideo = result.video.cloneNode(true);
+    });
+
+    return Promise.any(promises).then(function (result) {
+      videos.forEach(function (v) {
+        if (v !== result.video) {
+          v.onloadedmetadata = v.onerror = null;
+          v.removeAttribute('src');
+          v.load();
+        }
+      });
+
+      var cleanVideo = result.video.cloneNode(true);
       cleanVideo.muted = true;
       cleanVideo.playsInline = true;
       cleanVideo.preload = 'metadata';
+
+      result.video.onloadedmetadata = result.video.onerror = null;
+      result.video.removeAttribute('src');
+      result.video.load();
+
       return cleanVideo;
-    }).catch(e => {
-      videos.forEach(v => { v.onloadeddata = v.onerror = null; v.src = ''; });
+    }).catch(function (e) {
+      videos.forEach(function (v) {
+        v.onloadedmetadata = v.onerror = null;
+        v.removeAttribute('src');
+        v.load();
+      });
       throw e;
     });
   }
@@ -54,12 +210,18 @@
   }
 
   function sortModsByTimeId(dataArray) {
-    return dataArray.slice().sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+    return dataArray.slice().sort(function (a, b) {
+      return (b.id || '').localeCompare(a.id || '');
+    });
   }
 
   function preloadImagesWithConcurrency(urls, concurrency) {
-    return new Promise(function(resolve) {
-      if (!urls || urls.length === 0) { resolve(); return; }
+    return new Promise(function (resolve) {
+      if (!urls || urls.length === 0) {
+        resolve();
+        return;
+      }
+
       var index = 0;
       var running = 0;
       var total = urls.length;
@@ -71,16 +233,19 @@
         }
         var url = urls[index++];
         running++;
+
         var img = new Image();
-        var timer = setTimeout(function() {
+        var timer = setTimeout(function () {
           running--;
           next();
         }, 2500);
-        img.onload = img.onerror = function() {
+
+        img.onload = img.onerror = function () {
           clearTimeout(timer);
           running--;
           next();
         };
+
         img.src = url;
       }
 
@@ -90,188 +255,83 @@
     });
   }
 
-  function preloadVideosMetadata(urls, concurrency) {
-    return new Promise(function(resolve) {
-      if (!urls || urls.length === 0) { resolve(); return; }
-      var index = 0;
-      var running = 0;
-      var total = urls.length;
-
-      function next() {
-        if (index >= total) {
-          if (running === 0) resolve();
-          return;
-        }
-        var url = urls[index++];
-        running++;
-        var video = document.createElement('video');
-        video.preload = 'metadata';
-        video.muted = true;
-        video.playsInline = true;
-        video.style.position = 'fixed';
-        video.style.top = '-9999px';
-        video.style.left = '-9999px';
-        video.style.width = '1px';
-        video.style.height = '1px';
-        video.style.opacity = '0';
-        video.style.pointerEvents = 'none';
-        document.body.appendChild(video);
-
-        var timer = setTimeout(function() {
-          video.src = '';
-          video.remove();
-          running--;
-          next();
-        }, 4000);
-
-        video.onloadedmetadata = video.onerror = function() {
-          clearTimeout(timer);
-          video.src = '';
-          video.remove();
-          running--;
-          next();
-        };
-        video.src = url;
-      }
-
-      for (var i = 0; i < Math.min(concurrency, total); i++) {
-        next();
-      }
-    });
-  }
-
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  const loadingGif = document.getElementById('loadingGif');
-  const loadingText = document.getElementById('loadingText');
-  const potionWrapper = document.getElementById('potionWrapper');
-  const mainContent = document.getElementById('mainContent');
+  // ===== DOM 元素 =====
+  var loadingOverlay = document.getElementById('loadingOverlay');
+  var loadingGif = document.getElementById('loadingGif');
+  var loadingText = document.getElementById('loadingText');
+  var potionWrapper = document.getElementById('potionWrapper');
+  var mainContent = document.getElementById('mainContent');
   mainContent.style.opacity = '0';
   mainContent.style.transition = 'opacity 0.5s ease';
 
-  const logoImg = document.getElementById('logoImg');
-  const logoTower = document.getElementById('logoTower');
-  const logoArea = document.getElementById('logoArea');
+  var logoImg = document.getElementById('logoImg');
+  var logoArea = document.getElementById('logoArea');
+  var menuBtn = document.getElementById('menuBtn');
+  var menuPanel = document.getElementById('menuPanel');
+  var themeToggle = document.getElementById('themeToggle');
+  var themeIconSun = document.getElementById('themeIconSun');
+  var themeIconMoon = document.getElementById('themeIconMoon');
 
-  let modData = [];
-  let baseModData = [];
-  let activeCategory = 'all';
-  let currentPage = 1;
-  const ITEMS_PER_PAGE = 10;
+  var modData = [];
+  var baseModData = [];
+  var activeCategory = 'all';
+  var currentPage = 1;
+  var ITEMS_PER_PAGE = 10;
+  var allSiteData = {};
+  var manifestCache = {};
+  var dataLoadingPromises = {};
 
-  let allSiteData = {};
-  let manifestCache = {};
-  let dataLoadingPromises = {};
+  var mG = document.getElementById('mG');
+  var paginationEl = document.getElementById('pagination');
+  var sI = document.getElementById('sI');
+  var searchDropdown = document.getElementById('searchDropdown');
+  var searchContainer = document.getElementById('searchContainer');
+  var mO = document.getElementById('mO');
+  var mX = document.getElementById('mX');
+  var mC = document.getElementById('mC');
+  var lO = document.getElementById('lO');
+  var lX = document.getElementById('lX');
+  var lI = document.getElementById('lI');
+  var tT = document.getElementById('tT');
 
-  const ImageLoadQueue = {
-    queue: [],
-    active: 0,
-    maxConcurrent: 4,
-    enqueue(task) {
-      this.queue.push(task);
-      this.process();
-    },
-    process() {
-      while (this.active < this.maxConcurrent && this.queue.length > 0) {
-        const task = this.queue.shift();
-        this.active++;
-        task().finally(() => {
-          ImageLoadQueue.active--;
-          ImageLoadQueue.process();
-        });
-      }
-    }
-  };
-
-  const VideoLoadQueue = {
-    queue: [],
-    active: 0,
-    maxConcurrent: 2,
-    enqueue(task) {
-      this.queue.push(task);
-      this.process();
-    },
-    process() {
-      while (this.active < this.maxConcurrent && this.queue.length > 0) {
-        const task = this.queue.shift();
-        this.active++;
-        task().finally(() => {
-          VideoLoadQueue.active--;
-          VideoLoadQueue.process();
-        });
-      }
-    }
-  };
-
-  let pendingVideos = [];
-  let videoLoadGeneration = 0;
-  let renderSessionId = 0;
-
-  function cleanupPendingVideos() {
-    videoLoadGeneration++;
-    pendingVideos.forEach(v => {
-      try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {}
-    });
-    pendingVideos = [];
-  }
-
-  const modGrid = document.getElementById('modGrid');
-  const paginationEl = document.getElementById('pagination');
-  const searchInput = document.getElementById('searchInput');
-  const searchDropdown = document.getElementById('searchDropdown');
-  const searchContainer = document.getElementById('searchContainer');
-  const modalOverlay = document.getElementById('modalOverlay');
-  const modalClose = document.getElementById('modalClose');
-  const modalTitle = document.getElementById('modalTitle');
-  const modalRid = document.getElementById('modalRid');
-  const modalRidWrap = document.getElementById('modalRidWrap');
-  const ridDropdown = document.getElementById('ridDropdown');
-  const modalTags = document.getElementById('modalTags');
-  const modalDescText = document.getElementById('modalDescText');
-  const descToggle = document.getElementById('descToggle');
-  const modalAuthor = document.getElementById('modalAuthor');
-  const modalLinks = document.getElementById('modalLinks');
-  const downloadButtons = document.getElementById('downloadButtons');
-  const lightboxOverlay = document.getElementById('lightboxOverlay');
-  const lightboxClose = document.getElementById('lightboxClose');
-  const lightboxImg = document.getElementById('lightboxImg');
-  const previewImagesBtn = document.getElementById('previewImagesBtn');
-  const previewVideosBtn = document.getElementById('previewVideosBtn');
-  const previewContentArea = document.getElementById('previewContentArea');
-  const charaOverlay = document.getElementById('charaOverlay');
-  const charaClose = document.getElementById('charaClose');
-  const charaImg = document.getElementById('charaImg');
-  const toast = document.getElementById('toast');
-
-  const dataSources = {
+  var dataSources = {
     all: 'resources/json/post/sts2_mods/sts2_mods_1.json',
     skin: 'resources/json/post/O.o_interface/O.o_interface_1.json'
   };
-  const dataCache = {};
 
-  let currentImages = [];
-  let currentIndex = 0;
-  let currentMod = null;
-  let activePreviewTab = null;
+  var dataCache = {};
+  var currentMod = null;
+  var activePreviewTab = null;
 
-  const FALLBACK_LOADED2 = 'https://cdn.jsdmirror.com/gh/eyteamd-max/HTML-full-linked-html-/loaded_2.gif';
+  var FALLBACK_LOADED2 = 'https://cdn.jsdmirror.com/gh/eyteamd-max/HTML-full-linked-html-/loaded_2.gif';
   window.loaded2GifSrc = null;
 
-  const SITE_DOMAIN = 'axxxx.cyou';
+  var SITE_DOMAIN = 'axxxx.cyou';
+  var toastTimer;
 
-  let toastTimer;
+  // ===== SVG 图标 =====
+  var dlS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:12px;height:12px"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6M7 10l5 5 5-5M12 15V3"/></svg>';
+  var imS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+  var viS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+  var coS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+  var shS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+
+  // ===== 工具函数 =====
   function showToast(message) {
     clearTimeout(toastTimer);
-    toast.textContent = message;
-    toast.classList.add('show');
-    toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 2200);
+    tT.textContent = message;
+    tT.classList.add('sh2');
+    toastTimer = setTimeout(function () {
+      tT.classList.remove('sh2');
+    }, 2200);
   }
 
   function copyText(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       return navigator.clipboard.writeText(text);
     } else {
-      return new Promise((resolve, reject) => {
-        const textarea = document.createElement('textarea');
+      return new Promise(function (resolve, reject) {
+        var textarea = document.createElement('textarea');
         textarea.value = text;
         textarea.style.position = 'fixed';
         textarea.style.opacity = '0';
@@ -279,367 +339,125 @@
         document.body.appendChild(textarea);
         textarea.focus();
         textarea.select();
-        try { document.execCommand('copy'); document.body.removeChild(textarea); resolve(); }
-        catch (err) { document.body.removeChild(textarea); reject(err); }
-      });
-    }
-  }
-
-  let editMode = false;
-let editCollapsed = false;
-let selectedCardIds = new Set();
-let editPopupResolve = null;
-const EDIT_KEY_PREFIX = 'sts2edit_';
-
-const editFab = document.getElementById('editFab');
-const editToolbar = document.getElementById('editToolbar');
-const editToolbarMini = document.getElementById('editToolbarMini');
-const editAddMod = document.getElementById('editAddMod');
-const editSelectAll = document.getElementById('editSelectAll');
-const editDeselectAll = document.getElementById('editDeselectAll');
-const editExportSelected = document.getElementById('editExportSelected');
-const editExportAll = document.getElementById('editExportAll');
-const editImportJSON = document.getElementById('editImportJSON');
-const editImportZip = document.getElementById('editImportZip');
-const editFileList = document.getElementById('editFileList');
-const editSaveLocal = document.getElementById('editSaveLocal');
-const editLoadLocal = document.getElementById('editLoadLocal');
-const editClearData = document.getElementById('editClearData');
-const editCollapse = document.getElementById('editCollapse');
-const editExit = document.getElementById('editExit');
-const editSidebar = document.getElementById('editSidebar');
-const editSidebarClose = document.getElementById('editSidebarClose');
-const editSidebarList = document.getElementById('editSidebarList');
-const editSidebarExportZip = document.getElementById('editSidebarExportZip');
-const editPopupOverlay = document.getElementById('editPopupOverlay');
-const editPopupTitle = document.getElementById('editPopupTitle');
-const editPopupInput = document.getElementById('editPopupInput');
-const editPopupCancel = document.getElementById('editPopupCancel');
-const editPopupConfirm = document.getElementById('editPopupConfirm');
-
-function getEditKey(cat) { return EDIT_KEY_PREFIX + (cat || activeCategory); }
-function saveEditData() { try { localStorage.setItem(getEditKey(), JSON.stringify(modData)); } catch (e) {} }
-function loadEditData(cat) { try { var s = localStorage.getItem(EDIT_KEY_PREFIX + (cat || 'all')); if (s) return JSON.parse(s); } catch (e) {} return null; }
-function clearEditData(cat) { try { localStorage.removeItem(EDIT_KEY_PREFIX + (cat || 'all')); } catch (e) {} }
-
-function toggleEditMode() {
-  editMode = !editMode; editCollapsed = false;
-  if (!editMode) selectedCardIds.clear();
-  editFab.classList.toggle('active', editMode);
-  editToolbar.style.display = editMode ? 'flex' : 'none';
-  editToolbarMini.style.display = 'none';
-  document.body.classList.toggle('edit-mode-active', editMode);
-  updateExportSelectedBtn();
-  if (editMode) {
-    renderModCards(modData);
-    paginationEl.innerHTML = '';
-  } else {
-    renderPage(currentPage);
-  }
-  showToast(editMode ? '已进入编辑模式' : '已退出编辑模式');
-}
-
-function updateExportSelectedBtn() {
-  editExportSelected.disabled = selectedCardIds.size === 0;
-  editExportSelected.textContent = '导出选中' + (selectedCardIds.size > 0 ? '(' + selectedCardIds.size + ')' : '');
-}
-
-function showEditPopup(title, def) {
-  return new Promise(function(resolve) {
-    editPopupTitle.textContent = title; editPopupInput.value = def || '';
-    editPopupOverlay.style.display = 'flex';
-    setTimeout(function() { editPopupInput.focus(); editPopupInput.select(); }, 50);
-    editPopupResolve = resolve;
-  });
-}
-
-function exportJSON(data, filename) {
-  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  var url = URL.createObjectURL(blob); var a = document.createElement('a');
-  a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
-}
-
-function getExportFilename(prefix) {
-  var n = new Date(); var p = function(v, l) { return String(v).padStart(l, '0'); };
-  return prefix + '_' + n.getFullYear() + p(n.getMonth() + 1, 2) + p(n.getDate(), 2) + '_' + p(n.getHours(), 2) + p(n.getMinutes(), 2) + p(n.getSeconds(), 2) + '.json';
-}
-
-function getZipExportFilename(prefix) {
-  var n = new Date(); var p = function(v, l) { return String(v).padStart(l, '0'); };
-  return prefix + '_' + n.getFullYear() + p(n.getMonth() + 1, 2) + p(n.getDate(), 2) + '_' + p(n.getHours(), 2) + p(n.getMinutes(), 2) + p(n.getSeconds(), 2) + '.zip';
-}
-
-async function exportZip() {
-  if (typeof JSZip === 'undefined') {
-    showToast('JSZip 库未加载，无法导出ZIP');
-    return;
-  }
-  try {
-    var zip = new JSZip();
-    var dirMap = { all: 'sts2_mods', skin: 'O.o_interface' };
-    var dir = dirMap[activeCategory] || 'mods';
-    var folder = zip.folder(dir);
-    var data = allSiteData[activeCategory] || [];
-
-    // Try to load manifest to get file structure
-    var manifest = null;
-    try { manifest = await loadManifest(activeCategory); } catch(e) {}
-
-    if (manifest && manifest[dir]) {
-      var rangeStr = manifest[dir];
-      var indices = parseManifestRange(rangeStr);
-      if (indices.length > 0) {
-        var perFile = Math.ceil(data.length / indices.length);
-        indices.forEach(function(idx, i) {
-          var start = i * perFile;
-          var end = Math.min(start + perFile, data.length);
-          var slice = data.slice(start, end);
-          var filename = dir + '_' + idx + '.json';
-          folder.file(filename, JSON.stringify(slice, null, 2));
-        });
-        folder.file('manifest.json', JSON.stringify(manifest, null, 2));
-      } else {
-        folder.file(dir + '_1.json', JSON.stringify(data, null, 2));
-      }
-    } else {
-      folder.file(dir + '_1.json', JSON.stringify(data, null, 2));
-    }
-
-    var blob = await zip.generateAsync({ type: 'blob' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = getZipExportFilename(dir);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('ZIP 导出成功（共 ' + data.length + ' 条数据）');
-  } catch (e) {
-    console.error('exportZip error:', e);
-    showToast('ZIP 导出失败: ' + e.message);
-  }
-}
-
-function importJSON() {
-  var input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-  input.addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      try {
-        var data = JSON.parse(ev.target.result);
-        if (!Array.isArray(data)) {
-          showToast('JSON 格式不正确，需要数组格式');
-          return;
-        }
-        var existing = allSiteData[activeCategory] || [];
-        var existingIds = new Set(existing.map(function(m) { return m.id; }));
-        var newItems = data.filter(function(m) { return !existingIds.has(m.id); });
-        allSiteData[activeCategory] = newItems.concat(existing);
-        allSiteData[activeCategory].sort(function(a, b) { return (b.id || '').localeCompare(a.id || ''); });
-        modData = allSiteData[activeCategory];
-        baseModData = modData;
-        currentPage = 1;
-        renderPage(1);
-        showToast('已导入 ' + newItems.length + ' 条新数据（跳过 ' + (data.length - newItems.length) + ' 条重复）');
-      } catch (err) {
-        showToast('JSON 解析失败: ' + err.message);
-      }
-    };
-    reader.readAsText(file);
-  });
-  input.click();
-}
-
-function importZip() {
-  if (typeof JSZip === 'undefined') {
-    showToast('JSZip 库未加载，无法导入ZIP');
-    return;
-  }
-  var input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.zip';
-  input.addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    JSZip.loadAsync(file).then(function(zip) {
-      var totalImported = 0;
-      var existing = allSiteData[activeCategory] || [];
-      var existingIds = new Set(existing.map(function(m) { return m.id; }));
-      var jsonFiles = [];
-      zip.forEach(function(relativePath, zipEntry) {
-        if (!zipEntry.dir && relativePath.endsWith('.json') && !relativePath.endsWith('manifest.json')) {
-          jsonFiles.push(zipEntry);
+        try {
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          resolve();
+        } catch (err) {
+          document.body.removeChild(textarea);
+          reject(err);
         }
       });
-      var promises = jsonFiles.map(function(entry) {
-        return entry.async('string').then(function(text) {
-          try {
-            var data = JSON.parse(text);
-            if (Array.isArray(data)) {
-              var newItems = data.filter(function(m) { return !existingIds.has(m.id); });
-              newItems.forEach(function(m) { existingIds.add(m.id); });
-              existing.push.apply(existing, newItems);
-              totalImported += newItems.length;
-            }
-          } catch (err) {
-            console.warn('Skip invalid JSON:', err);
-          }
-        });
+    }
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function gCS(m) {
+    if (!m.coverImage) return '';
+    if (Array.isArray(m.coverImage)) return m.coverImage[0] || '';
+    return m.coverImage;
+  }
+
+  function gPI(t, u) {
+    t = (t || '').toLowerCase();
+    u = (u || '').toLowerCase();
+    if (/b站|bilibili/.test(t) || /bilibili|b23\.tv/.test(u)) return { n: 'B站', c: 'tb' };
+    if (/twitter|x[（(]/.test(t) || /twitter\.com|x\.com/.test(u)) return { n: 'X', c: 'tx' };
+    if (/github/.test(t) || /github\.com/.test(u)) return { n: 'GitHub', c: 'tg' };
+    if (/爱发电|ifdian/.test(t) || /ifdian/.test(u)) return { n: '爱发电', c: 'ta' };
+    if (/n网|nexus/.test(t) || /nexusmods/.test(u)) return { n: 'N网', c: 'tn' };
+    if (/youtube|油管/.test(t) || /youtube\.com/.test(u)) return { n: 'YouTube', c: 'ty' };
+    if (/夸克|quark/.test(t) || /quark/.test(u)) return { n: '夸克', c: 'tq' };
+    return { n: t, c: '' };
+  }
+
+  function gRC(r) {
+    r = (r || '').toLowerCase();
+    if (/发布|发布者|作者/.test(r)) return 'rp';
+    if (/形象|原画|美术|插画|立绘|画师/.test(r)) return 'ra';
+    if (/技术|mod|代码|开发|支持|程序/.test(r)) return 'rt';
+    return 'rd';
+  }
+
+  function pA(s) {
+    if (!s) return [];
+    if (!/\[[^\]]+\]/.test(s)) return [{ role: '', name: s.trim() }];
+    var r = [], m, re = /\[([^\]]+)\]\s*[-－—]\s*([^\[]*?)(?=\s*\[|$)/g;
+    while ((m = re.exec(s)) !== null) {
+      var ro = m[1].trim(), nm = m[2].trim().replace(/\s+/g, ' ');
+      if (nm) r.push({ role: ro, name: nm });
+    }
+    return r.length ? r : [{ role: '', name: s.trim() }];
+  }
+
+  function eNL(t) {
+    var p = t.split(/[｜|]/);
+    return p.length > 1 ? p.slice(1).join('｜').trim() : t.trim();
+  }
+
+  function mLA(a, l) {
+    if (!l || !l.length) return a.map(function (x) { return Object.assign({}, x, { links: [] }); });
+    if (a.length === 1) return [Object.assign({}, a[0], { links: l })];
+    return a.map(function (x) {
+      var mt = [];
+      l.forEach(function (li) {
+        var ln = eNL(li.text);
+        if (ln && x.name && (x.name.indexOf(ln) !== -1 || ln.indexOf(x.name) !== -1 || x.name.replace(/[（）()]/g, '').indexOf(ln.replace(/[（）()]/g, '')) !== -1)) mt.push(li);
       });
-      Promise.all(promises).then(function() {
-        allSiteData[activeCategory] = existing;
-        allSiteData[activeCategory].sort(function(a, b) { return (b.id || '').localeCompare(a.id || ''); });
-        modData = allSiteData[activeCategory];
-        baseModData = modData;
-        currentPage = 1;
-        renderPage(1);
-        showToast('ZIP 导入成功，共导入 ' + totalImported + ' 条新数据');
-      });
-    }).catch(function(err) {
-      console.error('importZip error:', err);
-      showToast('ZIP 导入失败: ' + err.message);
+      return Object.assign({}, x, { links: mt });
     });
-  });
-  input.click();
-}
-
-function toggleSidebar() {
-  var sidebar = editSidebar;
-  if (!sidebar) return;
-  var isOpen = sidebar.classList.contains('edit-sidebar-open');
-  if (isOpen) {
-    sidebar.classList.remove('edit-sidebar-open');
-  } else {
-    sidebar.classList.add('edit-sidebar-open');
-    loadSidebarData();
   }
-}
 
-function loadSidebarData() {
-  var listEl = editSidebarList;
-  if (!listEl) return;
-  listEl.innerHTML = '<div class="edit-sidebar-loading">加载中...</div>';
-  var categories = [
-    { key: 'all', dir: 'sts2_mods', label: 'MOD资源' },
-    { key: 'skin', dir: 'O.o_interface', label: 'O.o的网盘' }
-  ];
-  var html = '';
-  categories.forEach(function(cat) {
-    var data = allSiteData[cat.key] || [];
-    html += '<div class="edit-sidebar-category">' + cat.label + '</div>';
-    html += '<div class="edit-sidebar-item">';
-    html += '<span class="edit-sidebar-item-name">' + cat.dir + '_*.json</span>';
-    html += '<span class="edit-sidebar-item-count">' + data.length + ' MOD</span>';
-    html += '<button class="et-btn et-btn--accent edit-sidebar-item-export" data-category="' + cat.key + '">导出</button>';
-    html += '</div>';
-  });
-  listEl.innerHTML = html;
-  listEl.querySelectorAll('.edit-sidebar-item-export').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var catKey = btn.getAttribute('data-category');
-      var oldCategory = activeCategory;
-      activeCategory = catKey;
-      exportZip().then(function() {
-        activeCategory = oldCategory;
+  function cLL(ls) {
+    var la = [], al = [], hi = [];
+    if (!ls || !ls.length) return { latest: la, alternative: al, history: hi };
+    ls.forEach(function (l) {
+      var t = l.text;
+      if (t.includes('兼容') || t.includes('备选') || t.includes('旧版') || t.includes('历史版本')) hi.push(l);
+      else if (t.includes('在线解析') || t.includes('N网') || /官方帖子/.test(t)) al.push(l);
+      else la.push(l);
+    });
+    return { latest: la, alternative: al, history: hi };
+  }
+
+  function cOF(te, tg) {
+    if (te.textContent.length > 40) { tg.style.display = 'inline-block'; return; }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (te.scrollHeight > te.clientHeight + 2) tg.style.display = 'inline-block';
+        else tg.style.display = 'none';
       });
     });
-  });
-}
-
-function saveAllToLocal() {
-  try {
-    var backup = {};
-    for (var key in allSiteData) {
-      if (allSiteData.hasOwnProperty(key)) {
-        backup[key] = JSON.stringify(allSiteData[key]);
-      }
-    }
-    localStorage.setItem('sts2_edit_backup_all', JSON.stringify(backup));
-    showToast('所有编辑数据已保存到本地');
-  } catch (e) {
-    showToast('保存失败: ' + e.message);
   }
-}
 
-function loadAllFromLocal() {
-  try {
-    var raw = localStorage.getItem('sts2_edit_backup_all');
-    if (!raw) {
-      showToast('没有找到本地备份数据');
-      return;
-    }
-    var backup = JSON.parse(raw);
-    for (var key in backup) {
-      if (backup.hasOwnProperty(key)) {
-        allSiteData[key] = JSON.parse(backup[key]);
-      }
-    }
-    modData = allSiteData[activeCategory] || [];
-    baseModData = modData;
-    currentPage = 1;
-    renderPage(1);
-    showToast('已从本地备份还原数据');
-  } catch (e) {
-    showToast('还原失败: ' + e.message);
-  }
-}
-
-function addNewMod() {
-  showEditPopup('输入MOD标题', '').then(function(title) {
-    if (!title) return;
-    var newId = generateModId();
-    var newMod = { id: newId, title: title, category: activeCategory === 'all' ? 'skin' : activeCategory, size: '未知', date: extractDateFromRid(newId), badge: 'NEW', badgeClass: 'star', coverGradient: 'linear-gradient(135deg,#e8e0f0 0%,#d5c8e8 100%)', coverImage: [], images: [], description: '', author: '', authorLinks: [], tags: [], downloadLinks: [], previewImages: [], previewVideos: [] };
-    modData.unshift(newMod); modData = sortModsByTimeId(modData);
-    baseModData = modData;
-    saveEditData();
-    if (editMode) { renderModCards(modData); paginationEl.innerHTML = ''; }
-    else { currentPage = 1; renderPage(1); }
-    showToast('新MOD已添加，RID: ' + newMod.id);
-  });
-}
-
-function generateModId() {
-  const now = new Date();
-  const p = (n, l) => String(n).padStart(l, '0');
-  return p(now.getFullYear(), 4) + p(now.getMonth() + 1, 2) + p(now.getDate(), 2) +
-    p(now.getHours(), 2) + p(now.getMinutes(), 2) + p(now.getSeconds(), 2) + p(now.getMilliseconds(), 3);
-}
-
-function extractDateFromRid(rid) {
-  if (!rid || rid.length < 8) return '';
-  return rid.slice(0, 4) + '-' + rid.slice(4, 6) + '-' + rid.slice(6, 8);
-}
-
-function parseManifestRange(rangeStr) {
+  // ===== 数据加载（保留原站） =====
+  function parseManifestRange(rangeStr) {
     if (!rangeStr || typeof rangeStr !== 'string') return [];
-    const parts = rangeStr.split('~');
+    var parts = rangeStr.split('~');
     if (parts.length !== 2) return [];
-    const start = parseInt(parts[0], 10);
-    const end = parseInt(parts[1], 10);
+    var start = parseInt(parts[0], 10);
+    var end = parseInt(parts[1], 10);
     if (isNaN(start) || isNaN(end)) return [];
-    const result = [];
-    for (let i = start; i <= end; i++) result.push(i);
+    var result = [];
+    for (var i = start; i <= end; i++) result.push(i);
     return result;
   }
 
   async function loadManifest(categoryKey) {
     if (manifestCache[categoryKey]) return manifestCache[categoryKey];
-    const dirMap = {
-      all: 'sts2_mods',
-      skin: 'O.o_interface'
-    };
-    const dir = dirMap[categoryKey];
+
+    var dirMap = { all: 'sts2_mods', skin: 'O.o_interface' };
+    var dir = dirMap[categoryKey];
     if (!dir) return null;
-    const manifestUrl = 'resources/json/post/' + dir + '/manifest.json';
+
+    var manifestUrl = 'resources/json/post/' + dir + '/manifest.json';
     try {
-      const resp = await fetch(manifestUrl, { cache: 'no-store' });
+      var resp = await fetch(manifestUrl, { cache: 'no-store' });
       if (!resp.ok) return null;
-      const data = await resp.json();
+      var data = await resp.json();
       manifestCache[categoryKey] = data;
       return data;
     } catch (e) {
@@ -648,20 +466,18 @@ function parseManifestRange(rangeStr) {
   }
 
   async function loadJsonByManifest(categoryKey, fileIndex) {
-    const dirMap = {
-      all: 'sts2_mods',
-      skin: 'O.o_interface'
-    };
-    const dir = dirMap[categoryKey];
+    var dirMap = { all: 'sts2_mods', skin: 'O.o_interface' };
+    var dir = dirMap[categoryKey];
     if (!dir) return [];
-    const url = 'resources/json/post/' + dir + '/' + dir + '_' + fileIndex + '.json';
+
+    var url = 'resources/json/post/' + dir + '/' + dir + '_' + fileIndex + '.json';
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function () { controller.abort(); }, 8000);
+      var response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
       clearTimeout(timeoutId);
       if (!response.ok) return [];
-      let rawData = await response.json();
+      var rawData = await response.json();
       rawData = sortModsByTimeId(rawData);
       return rawData;
     } catch (error) {
@@ -673,30 +489,31 @@ function parseManifestRange(rangeStr) {
     if (allSiteData[categoryKey]) return allSiteData[categoryKey];
     if (dataLoadingPromises[categoryKey]) return await dataLoadingPromises[categoryKey];
 
-    const promise = (async function() {
-      const manifest = await loadManifest(categoryKey);
-      const dirMap = { all: 'sts2_mods', skin: 'O.o_interface' };
-      const dir = dirMap[categoryKey];
+    var promise = (async function () {
+      var manifest = await loadManifest(categoryKey);
+      var dirMap = { all: 'sts2_mods', skin: 'O.o_interface' };
+      var dir = dirMap[categoryKey];
 
       if (manifest && manifest[dir]) {
-        const rangeStr = manifest[dir];
-        const indices = parseManifestRange(rangeStr);
-
-        const dataArrays = await Promise.all(indices.map(function(idx) { return loadJsonByManifest(categoryKey, idx); }));
-        const allData = dataArrays.flat();
+        var rangeStr = manifest[dir];
+        var indices = parseManifestRange(rangeStr);
+        var dataArrays = await Promise.all(indices.map(function (idx) {
+          return loadJsonByManifest(categoryKey, idx);
+        }));
+        var allData = dataArrays.flat();
         allSiteData[categoryKey] = allData;
         return allData;
       }
 
-      const url = dataSources[categoryKey];
+      var url = dataSources[categoryKey];
       if (!url) return [];
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(function() { controller.abort(); }, 8000);
-        const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function () { controller.abort(); }, 8000);
+        var response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
         clearTimeout(timeoutId);
         if (!response.ok) return [];
-        let rawData = await response.json();
+        var rawData = await response.json();
         rawData = sortModsByTimeId(rawData);
         allSiteData[categoryKey] = rawData;
         return rawData;
@@ -707,159 +524,218 @@ function parseManifestRange(rangeStr) {
 
     dataLoadingPromises[categoryKey] = promise;
     try {
-      const result = await promise;
+      var result = await promise;
       return result;
     } finally {
       delete dataLoadingPromises[categoryKey];
     }
   }
 
+  // ===== 预加载（保留原站） =====
+  var preloadState = { currentPreloadPage: 0 };
+
+  function extractCoverUrls(dataSlice) {
+    var urls = [];
+    dataSlice.forEach(function (mod) {
+      if (mod.coverImage) {
+        var url = Array.isArray(mod.coverImage) ? (mod.coverImage[0] || '') : mod.coverImage;
+        if (url.trim()) urls.push(url);
+      }
+    });
+    return urls;
+  }
+
+  function extractPreviewImageUrls(dataSlice, maxPerMod) {
+    maxPerMod = maxPerMod || 4;
+    var urls = [];
+    dataSlice.forEach(function (mod) {
+      if (Array.isArray(mod.previewImages)) {
+        mod.previewImages.slice(0, maxPerMod).forEach(function (item) {
+          var candidates = toCandidates(item);
+          if (candidates.length && candidates[0]) urls.push(candidates[0]);
+        });
+      }
+    });
+    return urls;
+  }
+
+  function getPageSlice(dataArray, pageNum) {
+    var start = (pageNum - 1) * ITEMS_PER_PAGE;
+    var end = start + ITEMS_PER_PAGE;
+    return dataArray.slice(start, end);
+  }
+
+  function triggerAdjacentPreload(pageNum) {
+    var totalPages = Math.ceil(modData.length / ITEMS_PER_PAGE);
+    var nextPage = pageNum + 1;
+    if (nextPage > totalPages) return;
+    if (preloadState.currentPreloadPage >= nextPage) return;
+
+    preloadState.currentPreloadPage = nextPage;
+    var nextPageData = getPageSlice(modData, nextPage);
+    var coverUrls = extractCoverUrls(nextPageData);
+
+    preloadImagesWithConcurrency(coverUrls, 6).then(function () {
+      var previewUrls = extractPreviewImageUrls(nextPageData, 3);
+      return preloadImagesWithConcurrency(previewUrls, 4);
+    });
+  }
+
+  async function priorityPreload() {
+    await Promise.all([
+      loadAllDataForCategory('all'),
+      loadAllDataForCategory('skin')
+    ]);
+
+    var defaultData = allSiteData['all'] || [];
+    var page1Data = getPageSlice(defaultData, 1);
+    var page1Covers = extractCoverUrls(page1Data);
+    await preloadImagesWithConcurrency(page1Covers, 6);
+
+    var page2Data = getPageSlice(defaultData, 2);
+    var page2Covers = extractCoverUrls(page2Data);
+    await preloadImagesWithConcurrency(page2Covers, 6);
+
+    var page1Previews = extractPreviewImageUrls(page1Data, 3);
+    await preloadImagesWithConcurrency(page1Previews, 4);
+
+    preloadState.currentPreloadPage = 2;
+  }
+
+  // ===== 分页器（保留原站逻辑，适配新样式） =====
   function renderPagination(totalItems, currentPageNum) {
-        paginationEl.innerHTML = '';
-        if (editMode) return;
-        var totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-        if (totalPages <= 1) return;
+    paginationEl.innerHTML = '';
+    var totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    if (totalPages <= 1) return;
 
-        paginationEl.style.display = 'flex';
-        paginationEl.style.flexWrap = 'nowrap';
-        paginationEl.style.alignItems = 'center';
-        paginationEl.style.width = '100%';
-        paginationEl.style.maxWidth = '100%';
-        paginationEl.style.boxSizing = 'border-box';
-        paginationEl.style.overflow = 'hidden';
+    paginationEl.style.display = 'flex';
 
-        function createBtn(type, content, disabled, clickHandler) {
-            var btn = document.createElement('button');
-            btn.className = type;
-            btn.innerHTML = content;
-            btn.style.flexShrink = '1';
-            btn.style.minWidth = '0';
-            if (disabled) btn.disabled = true;
-            if (clickHandler) btn.addEventListener('click', clickHandler);
-            return btn;
-        }
-
-        function createPageBtn(pageNum) {
-            return createBtn('pagination-page' + (pageNum === currentPageNum ? ' active' : ''), 
-                pageNum, false, function () {
-                    currentPage = pageNum;
-                    renderPage(pageNum);
-                    modGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                });
-        }
-
-        function createDots() {
-            var span = document.createElement('span');
-            span.className = 'pagination-dots';
-            span.textContent = '...';
-            span.style.flexShrink = '1';
-            span.style.minWidth = '0';
-            return span;
-        }
-
-        var items = [];
-
-        items.push(createBtn('pagination-btn', '&#8249;', currentPageNum <= 1, function () {
-            if (currentPageNum > 1) {
-                currentPage--;
-                renderPage(currentPage);
-                modGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }));
-
-        items.push(createPageBtn(1));
-
-        if (totalPages <= 4) {
-            for (var i = 2; i <= totalPages; i++) {
-                items.push(createPageBtn(i));
-            }
-        } else {
-            if (currentPageNum <= 4) {
-                for (var j = 2; j <= 4; j++) {
-                    items.push(createPageBtn(j));
-                }
-                items.push(createDots());
-                items.push(createPageBtn(totalPages));
-            } else {
-                items.push(createDots());
-                
-                if (currentPageNum - 1 > 1) {
-                    items.push(createPageBtn(currentPageNum - 1));
-                }
-                items.push(createPageBtn(currentPageNum));
-                if (currentPageNum + 1 < totalPages) {
-                    items.push(createPageBtn(currentPageNum + 1));
-                }
-
-                items.push(createDots());
-                items.push(createPageBtn(totalPages));
-            }
-        }
-
-        items.push(createBtn('pagination-btn', '&#8250;', currentPageNum >= totalPages, function () {
-            if (currentPageNum < totalPages) {
-                currentPage++;
-                renderPage(currentPage);
-                modGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }));
-
-        items.forEach(function(item) {
-            paginationEl.appendChild(item);
-        });
-
-        var gotoWrap = document.createElement('span');
-        gotoWrap.className = 'pagination-goto';
-        gotoWrap.style.flexShrink = '0';
-        gotoWrap.style.marginLeft = '8px';
-
-        var gotoInput = document.createElement('input');
-        gotoInput.type = 'text';
-        gotoInput.className = 'pagination-goto-input';
-        gotoInput.placeholder = '\\';
-        gotoInput.maxLength = 3;
-        gotoInput.setAttribute('aria-label', '输入页码');
-
-        var gotoBtn = document.createElement('button');
-        gotoBtn.className = 'pagination-goto-btn';
-        gotoBtn.innerHTML = '<svg class="goto-icon-svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
-        gotoBtn.setAttribute('aria-label', '跳转到指定页');
-
-        var gotoMobile = document.createElement('button');
-        gotoMobile.className = 'pagination-goto-mobile-trigger';
-        gotoMobile.innerHTML = '<svg class="goto-icon-svg goto-icon-svg-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
-        gotoMobile.setAttribute('aria-label', '跳转页码');
-
-        function doGoto(value) {
-            var num = parseInt(value, 10);
-            if (isNaN(num) || num < 1 || num > totalPages) {
-                showToast('页码范围：1 ~ ' + totalPages);
-                return;
-            }
-            currentPage = num;
-            renderPage(num);
-            modGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            gotoInput.value = '';
-        }
-
-        gotoInput.addEventListener('input', function () {
-            this.value = this.value.replace(/[^\d]/g, '').slice(0, 3);
-        });
-        gotoInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') doGoto(this.value);
-        });
-        gotoBtn.addEventListener('click', function () {
-            doGoto(gotoInput.value);
-        });
-        gotoMobile.addEventListener('click', function () {
-            openGotoPopup(totalPages);
-        });
-
-        gotoWrap.appendChild(gotoInput);
-        gotoWrap.appendChild(gotoBtn);
-        gotoWrap.appendChild(gotoMobile);
-        paginationEl.appendChild(gotoWrap);
+    function createBtn(type, content, disabled, clickHandler) {
+      var btn = document.createElement('button');
+      btn.className = type;
+      btn.innerHTML = content;
+      if (disabled) btn.disabled = true;
+      if (clickHandler) btn.addEventListener('click', clickHandler);
+      return btn;
     }
+
+    function createPageBtn(pageNum) {
+      return createBtn('pagination-page' + (pageNum === currentPageNum ? ' active' : ''),
+        pageNum, false, function () {
+          currentPage = pageNum;
+          renderPage(pageNum);
+          mG.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+
+    function createDots() {
+      var span = document.createElement('span');
+      span.className = 'pagination-dots';
+      span.textContent = '...';
+      return span;
+    }
+
+    var items = [];
+
+    items.push(createBtn('pagination-btn', '&#8249;', currentPageNum <= 1, function () {
+      if (currentPageNum > 1) {
+        currentPage--;
+        renderPage(currentPage);
+        mG.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }));
+
+    items.push(createPageBtn(1));
+
+    if (totalPages <= 4) {
+      for (var i = 2; i <= totalPages; i++) {
+        items.push(createPageBtn(i));
+      }
+    } else {
+      if (currentPageNum <= 4) {
+        for (var j = 2; j <= 4; j++) {
+          items.push(createPageBtn(j));
+        }
+        items.push(createDots());
+        items.push(createPageBtn(totalPages));
+      } else {
+        items.push(createDots());
+
+        if (currentPageNum - 1 > 1) {
+          items.push(createPageBtn(currentPageNum - 1));
+        }
+        items.push(createPageBtn(currentPageNum));
+        if (currentPageNum + 1 < totalPages) {
+          items.push(createPageBtn(currentPageNum + 1));
+        }
+
+        items.push(createDots());
+        items.push(createPageBtn(totalPages));
+      }
+    }
+
+    items.push(createBtn('pagination-btn', '&#8250;', currentPageNum >= totalPages, function () {
+      if (currentPageNum < totalPages) {
+        currentPage++;
+        renderPage(currentPage);
+        mG.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }));
+
+    items.forEach(function (item) {
+      paginationEl.appendChild(item);
+    });
+
+    var gotoWrap = document.createElement('span');
+    gotoWrap.className = 'pagination-goto';
+
+    var gotoInput = document.createElement('input');
+    gotoInput.type = 'text';
+    gotoInput.className = 'pagination-goto-input';
+    gotoInput.placeholder = '\\';
+    gotoInput.maxLength = 3;
+    gotoInput.setAttribute('aria-label', '输入页码');
+
+    var gotoBtn = document.createElement('button');
+    gotoBtn.className = 'pagination-goto-btn';
+    gotoBtn.innerHTML = '<svg class="goto-icon-svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
+    gotoBtn.setAttribute('aria-label', '跳转到指定页');
+
+    var gotoMobile = document.createElement('button');
+    gotoMobile.className = 'pagination-goto-mobile-trigger';
+    gotoMobile.innerHTML = '<svg class="goto-icon-svg goto-icon-svg-sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>';
+    gotoMobile.setAttribute('aria-label', '跳转页码');
+
+    function doGoto(value) {
+      var num = parseInt(value, 10);
+      if (isNaN(num) || num < 1 || num > totalPages) {
+        showToast('页码范围：1 ~ ' + totalPages);
+        return;
+      }
+      currentPage = num;
+      renderPage(num);
+      mG.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      gotoInput.value = '';
+    }
+
+    gotoInput.addEventListener('input', function () {
+      this.value = this.value.replace(/[^\d]/g, '').slice(0, 3);
+    });
+    gotoInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') doGoto(this.value);
+    });
+    gotoBtn.addEventListener('click', function () {
+      doGoto(gotoInput.value);
+    });
+    gotoMobile.addEventListener('click', function () {
+      openGotoPopup(totalPages);
+    });
+
+    gotoWrap.appendChild(gotoInput);
+    gotoWrap.appendChild(gotoBtn);
+    gotoWrap.appendChild(gotoMobile);
+    paginationEl.appendChild(gotoWrap);
+  }
 
   function openGotoPopup(totalPages) {
     var existing = document.getElementById('gotoPopupOverlay');
@@ -903,7 +779,7 @@ function parseManifestRange(rangeStr) {
       renderPage(num);
       overlay.remove();
       setTimeout(function () {
-        modGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        mG.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 50);
     }
 
@@ -926,1216 +802,971 @@ function parseManifestRange(rangeStr) {
     setTimeout(function () { input.focus(); }, 100);
   }
 
-  function preloadAdjacentPages(currentPg) {
-    const totalPages = Math.ceil(modData.length / ITEMS_PER_PAGE);
-    const pagesToPreload = [currentPg - 1, currentPg + 1].filter(p => p >= 1 && p <= totalPages);
-    pagesToPreload.forEach(pg => {
-      const start = (pg - 1) * ITEMS_PER_PAGE;
-      const end = Math.min(start + ITEMS_PER_PAGE, modData.length);
-      const pageItems = modData.slice(start, end);
-      pageItems.forEach(mod => {
-        const coverUrls = toCandidates(mod.coverImage);
-        if (coverUrls.length > 0) {
-          const img = new Image();
-          img.src = coverUrls[0];
-        }
-        if (Array.isArray(mod.previewImages) && mod.previewImages.length > 0) {
-          const urls = toCandidates(mod.previewImages[0]);
-          if (urls.length > 0) {
-            const previewImg = new Image();
-            previewImg.src = urls[0];
-          }
-        }
-      });
-    });
-  }
-
   function renderPage(pageNum) {
-    renderSessionId++;
-    const sid = renderSessionId;
-    if (editMode) {
-        renderModCards(modData);
-        paginationEl.innerHTML = '';
-        return;
-    }
-    const start = (pageNum - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    const pageData = modData.slice(start, end);
-    if (sid !== renderSessionId) return;
+    var start = (pageNum - 1) * ITEMS_PER_PAGE;
+    var end = start + ITEMS_PER_PAGE;
+    var pageData = modData.slice(start, end);
     renderModCards(pageData);
     renderPagination(modData.length, pageNum);
-    preloadAdjacentPages(pageNum);
-}
 
-function openLightbox(src) {
-    lightboxImg.src = src;
-    lightboxOverlay.classList.add('active');
+    setTimeout(function () {
+      triggerAdjacentPreload(pageNum);
+    }, 300);
   }
 
-  async function raceImageWithRetry(urls, maxRetries) {
-    maxRetries = maxRetries || 2;
-    let lastError;
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await raceImage(urls);
-      } catch (err) {
-        lastError = err;
-        if (attempt < maxRetries) {
-          await new Promise(function(r) { setTimeout(r, 500); });
-        }
-      }
-    }
-    throw lastError;
-  }
-
-  async function raceVideoWithRetry(urls, maxRetries) {
-    maxRetries = maxRetries || 2;
-    let lastError;
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await raceVideo(urls);
-      } catch (err) {
-        lastError = err;
-        if (attempt < maxRetries) {
-          await new Promise(function(r) { setTimeout(r, 500); });
-        }
-      }
-    }
-    throw lastError;
-  }
-
-  function switchPreviewTab(tab) {
-    activePreviewTab = (activePreviewTab === tab) ? null : tab;
-    updatePreviewButtons();
-    renderPreviewContent();
-  }
-
-  function updatePreviewButtons() {
-    const imgActive = activePreviewTab === 'images';
-    const vidActive = activePreviewTab === 'videos';
-    previewImagesBtn.textContent = imgActive ? '预览图片 ▴' : '预览图片 ▾';
-    previewVideosBtn.textContent = vidActive ? '预览视频 ▴' : '预览视频 ▾';
-    previewImagesBtn.classList.toggle('active', imgActive);
-    previewVideosBtn.classList.toggle('active', vidActive);
-  }
-
-  function renderPreviewContent() {
-    if (!currentMod) { previewContentArea.innerHTML = ''; return; }
-    const mod = currentMod;
-    previewContentArea.innerHTML = '<div class="preview-empty-card">正在加载预览资源...</div>';
-    if (activePreviewTab === 'images') {
-      renderPreviewImages(Array.isArray(mod.previewImages) ? mod.previewImages : []);
-    } else if (activePreviewTab === 'videos') {
-      renderPreviewVideos(Array.isArray(mod.previewVideos) ? mod.previewVideos : []);
-    } else {
-      previewContentArea.innerHTML = '';
-    }
-  }
-
-  async function renderPreviewImages(items) {
-    if (items.length === 0) {
-      previewContentArea.innerHTML = '<div class="preview-empty-card">该MOD猫猫还没有配置图片资源哦</div>';
+  // ===== 新版卡片渲染（参考版本） =====
+  function renderModCards(dataArray) {
+    mG.innerHTML = '';
+    if (dataArray.length === 0) {
+      mG.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--tm)">没有找到相关MOD</div>';
       return;
     }
-    const grid = document.createElement('div');
-    grid.className = 'preview-image-grid';
-    previewContentArea.innerHTML = '';
-    previewContentArea.appendChild(grid);
-    const placeholders = items.map(function() {
-      const ph = document.createElement('div');
-      ph.className = 'preview-image-item';
-      ph.style.background = '#f0f0f0';
-      ph.style.aspectRatio = '16/9';
-      ph.textContent = '加载中...';
-      grid.appendChild(ph);
-      return ph;
-    });
-    await Promise.allSettled(
-      items.map(function(item, idx) {
-        const urls = toCandidates(item);
-        return new Promise(function(resolve) {
-          ImageLoadQueue.enqueue(function() {
-            return raceImageWithRetry(urls, 2).then(function(url) {
-              const img = document.createElement('img');
-              img.src = url;
-              img.className = 'preview-image-item';
-              img.style.cursor = 'zoom-in';
-              img.addEventListener('click', function() { openLightbox(url); });
-              grid.replaceChild(img, placeholders[idx]);
-            }).catch(function() { placeholders[idx].textContent = '加载失败'; }).then(resolve);
-          });
-        });
-      })
-    );
-  }
 
-  async function renderPreviewVideos(items) {
-    if (items.length === 0) {
-      previewContentArea.innerHTML = '<div class="preview-empty-card">该MOD猫猫还没有配置视频资源哦</div>';
-      return;
-    }
-    const list = document.createElement('div');
-    list.className = 'preview-video-list';
-    previewContentArea.innerHTML = '';
-    previewContentArea.appendChild(list);
-    const currentGen = videoLoadGeneration;
-    items.forEach(function(item) {
-      const ph = document.createElement('div');
-      ph.className = 'preview-video-item';
-      ph.style.background = '#f0f0f0';
-      ph.style.height = '200px';
-      ph.style.display = 'flex';
-      ph.style.alignItems = 'center';
-      ph.style.justifyContent = 'center';
-      ph.textContent = '视频加载中...';
-      list.appendChild(ph);
-      let urls = [];
-      if (typeof item === 'string') {
-        urls = [item];
-      } else if (item.urls && Array.isArray(item.urls) && item.urls.length > 0) {
-        urls = item.urls;
-      } else if (item.url) {
-        urls = [item.url];
-      }
-      if (urls.length === 0) { ph.textContent = '视频链接缺失'; return; }
-      VideoLoadQueue.enqueue(function() {
-        return new Promise(function(resolve) {
-          if (currentGen !== videoLoadGeneration) { resolve(); return; }
-          raceVideoWithRetry(urls).then(function(video) {
-            if (currentGen !== videoLoadGeneration) { resolve(); return; }
-            video.className = 'preview-video-item';
-            video.controls = true;
-            video.preload = 'metadata';
-            if (item.poster) video.poster = item.poster;
-            pendingVideos.push(video);
-            list.replaceChild(video, ph);
-          }).catch(function() { ph.textContent = '视频加载失败'; }).then(resolve);
-        });
+    dataArray.forEach(function (mod) {
+      var c = document.createElement('div');
+      c.className = 'cd';
+      c.dataset.modId = mod.id;
+      var cs = gCS(mod);
+      var ch = cs
+        ? '<img src="' + cs + '" alt="' + esc(mod.title) + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="cp" style="display:none">📦</div>'
+        : '<div class="cp">📦</div>';
+      var MX = 4, tg = mod.tags || [], vt = tg.slice(0, MX), ec = tg.length - MX;
+      var th = vt.map(function (t) {
+        return '<span class="ti ' + t.toLowerCase() + '">' + esc(t) + '<span class="tag-delete-btn" data-tag="' + esc(t) + '">×</span></span>';
+      }).join('');
+      if (ec > 0) th += '<span class="tm2">+' + ec + '</span>';
+      th += '<button class="mod-tag-add-btn" data-mod-id="' + mod.id + '">+ 标签</button>';
+
+      c.innerHTML = '<div class="cv" style="background:' + (mod.coverGradient || 'linear-gradient(135deg,#f5f2f8,#ece7f3)') + '">' + ch + '</div>' +
+        '<div class="ci"><div class="tr"><span class="tt">' + esc(mod.title) + '</span><span class="tv">' + esc(mod.badge) + '</span></div>' +
+        '<div class="tl">' + th + '</div>' +
+        '<div class="mt"><span>' + esc(mod.size) + '</span><span class="md">·</span><span>' + esc(mod.date) + '</span></div></div>';
+
+      c.addEventListener('click', function (e) {
+        if (isEditMode) {
+          if (e.target.closest('.mod-card-edit-check') || e.target.closest('.mod-card-edit-delete') ||
+              e.target.closest('.mod-card-edit-cover-btn') || e.target.closest('.mod-card-edit-badge-btn') ||
+              e.target.closest('.tag-delete-btn') || e.target.closest('.mod-tag-add-btn')) {
+            return;
+          }
+        }
+        oM(mod);
       });
+      mG.appendChild(c);
     });
+
+    if (isEditMode) {
+      attachEditControlsToCards();
+    }
   }
 
-  previewImagesBtn.addEventListener('click', function() { switchPreviewTab('images'); });
-  previewVideosBtn.addEventListener('click', function() { switchPreviewTab('videos'); });
+  // ===== Lightbox =====
+  function oLB(s) {
+    lI.src = s;
+    lO.classList.add('act');
+  }
+  lX.addEventListener('click', function () { lO.classList.remove('act'); });
+  lO.addEventListener('click', function (e) { if (e.target === lO) lO.classList.remove('act'); });
 
-    async function openModal(mod){
-currentMod=mod;
-
-if(editMode){
-modalTitle.innerHTML='';
-var ts=document.createElement('span');
-ts.className='editable-field';
-ts.contentEditable='true';
-ts.textContent=mod.title||'';
-ts.addEventListener('blur',function(){mod.title=ts.textContent.trim();saveEditData();});
-ts.addEventListener('click',function(e){e.stopPropagation();});
-modalTitle.appendChild(ts);
-var eb=document.createElement('span');
-eb.className='modal-edit-badge';
-eb.textContent='可编辑';
-modalTitle.appendChild(eb);
-}else{
-modalTitle.textContent=mod.title;
-}
-
-const modalCoverWrap=document.getElementById('modalCoverWrap');
-const modalCoverImg=document.getElementById('modalCoverImg');
-let modalCoverSrc='';
-if(mod.coverImage){
-if(Array.isArray(mod.coverImage))modalCoverSrc=mod.coverImage[0]||'';
-else modalCoverSrc=mod.coverImage;
-}
-const hasModalCover=modalCoverSrc.trim()!=='';
-if(hasModalCover){
-modalCoverImg.src=modalCoverSrc;
-modalCoverImg.style.objectFit='cover';
-modalCoverImg.style.cursor='zoom-in';
-modalCoverImg.onclick=function(e){e.stopPropagation();openLightbox(modalCoverImg.src);};
-modalCoverWrap.style.display='block';
-modalCoverImg.style.display='block';
-}else{
-modalCoverWrap.style.display='none';
-modalCoverImg.src='';
-modalCoverImg.onclick=null;
-}
-
-if(editMode){
-modalRid.innerHTML='';
-var rs=document.createElement('span');
-rs.className='editable-field';
-rs.contentEditable='true';
-rs.textContent=mod.id||'';
-rs.addEventListener('blur',function(){
-mod.id=rs.textContent.trim();
-mod.date=extractDateFromRid(mod.id);
-saveEditData();
-});
-rs.addEventListener('click',function(e){e.stopPropagation();});
-modalRid.appendChild(rs);
-var regenBtn=document.createElement('button');
-regenBtn.className='modal-rid-regen-btn';
-regenBtn.textContent='🔄 重新生成RID';
-regenBtn.addEventListener('click',function(e){
-e.stopPropagation();
-var newId=generateModId();
-rs.textContent=newId;
-mod.id=newId;
-mod.date=extractDateFromRid(newId);
-saveEditData();
-showToast('RID与日期已重新生成');
-});
-modalRid.appendChild(regenBtn);
-modalRid.onclick=null;
-ridDropdown.style.display='none';
-}else{
-modalRid.textContent='RID: '+(mod.id||'无');
-modalRid.onclick=function(e){
-e.stopPropagation();
-const isVisible=ridDropdown.style.display==='block';
-ridDropdown.style.display=isVisible?'none':'block';
-};
-ridDropdown.querySelectorAll('.rid-option').forEach(function(btn){
-btn.onclick=function(e){
-e.stopPropagation();
-const action=btn.dataset.action;
-if(action==='copy-rid'){
-copyText('RID:'+(mod.id||'')).then(function(){showToast('RID 已复制，快分享给小伙伴吧~');}).catch(function(){showToast('复制失败，请手动复制');});
-}else if(action==='copy-link'){
-copyText('https://'+SITE_DOMAIN+'/?rid='+(mod.id||'')).then(function(){showToast('帖子链接已复制~');}).catch(function(){showToast('复制失败，请手动复制');});
-}
-ridDropdown.style.display='none';
-};
-});
-}
-
-modalTags.innerHTML='';
-if(mod.tags&&Array.isArray(mod.tags)){
-mod.tags.forEach(function(tag,idx){
-const span=document.createElement('span');
-span.className='modal-tag '+tag.toLowerCase();
-span.textContent=tag;
-if(editMode){
-var db=document.createElement('span');
-db.textContent=' \u00d7';
-db.style.cssText='cursor:pointer;margin-left:4px;color:#b14b4b;font-weight:700';
-db.addEventListener('click',function(e){e.stopPropagation();mod.tags.splice(idx,1);saveEditData();openModal(mod);});
-span.appendChild(db);
-}
-modalTags.appendChild(span);
-});
-}
-if(editMode){
-var atb=document.createElement('button');
-atb.className='modal-edit-add-btn';
-atb.textContent='+ 标签';
-atb.addEventListener('click',async function(){
-var t=await showEditPopup('输入新标签','');
-if(t){if(!mod.tags)mod.tags=[];mod.tags.push(t);saveEditData();openModal(mod);}
-});
-modalTags.appendChild(atb);
-}
-
-let desc=(mod.description||'暂无介绍')
-.replace(/&/g,'&amp;')
-.replace(/</g,'&lt;')
-.replace(/>/g,'&gt;')
-.replace(/\n/g,'<br>');
-const urlRegex=/(https?:\/\/[^\s<<"]+)/g;
-desc=desc.replace(urlRegex,'<a href="$1" target="_blank" rel="noopener noreferrer" class="desc-link">$1</a>');
-
-if(editMode){
-modalDescText.innerHTML='';
-var dd=document.createElement('div');
-dd.className='editable-field';
-dd.contentEditable='true';
-dd.innerHTML=desc;
-dd.style.lineHeight='1.7';
-dd.addEventListener('blur',function(){mod.description=dd.innerText;saveEditData();});
-dd.addEventListener('click',function(e){e.stopPropagation();});
-modalDescText.appendChild(dd);
-modalDescText.classList.add('expanded');
-descToggle.style.display='none';
-}else{
-modalDescText.innerHTML=desc;
-modalDescText.classList.remove('expanded');
-descToggle.style.display='none';
-descToggle.textContent='展开全文';
-}
-
-if(editMode){
-modalAuthor.innerHTML='';
-modalAuthor.appendChild(document.createTextNode('作者：'));
-var as=document.createElement('span');
-as.className='editable-field';
-as.contentEditable='true';
-as.textContent=mod.author||'';
-as.addEventListener('blur',function(){mod.author=as.textContent.trim();saveEditData();});
-as.addEventListener('click',function(e){e.stopPropagation();});
-modalAuthor.appendChild(as);
-}else{
-modalAuthor.textContent='作者：'+(mod.author||'佚名');
-}
-
-modalLinks.innerHTML='';
-if(editMode){
-var la=[];
-if(mod.authorLinks){
-if(Array.isArray(mod.authorLinks))la=mod.authorLinks.slice();
-else{
-[{name:'Twitter',key:'twitter'},{name:'Pixiv',key:'pixiv'},{name:'Bilibili',key:'bilibili'}].forEach(function(m){
-if(mod.authorLinks[m.key])la.push({text:m.name,url:mod.authorLinks[m.key]});
-});
-}
-}
-var lc=document.createElement('div');
-lc.style.cssText='display:flex;flex-direction:column;gap:6px';
-la.forEach(function(link,idx){
-var row=document.createElement('div');
-row.className='modal-link-edit-row';
-var t1=document.createElement('span');
-t1.className='editable-field';
-t1.contentEditable='true';
-t1.textContent=link.text||'';
-t1.style.cssText='min-width:50px;max-width:80px';
-t1.addEventListener('blur',function(){link.text=t1.textContent.trim();if(!Array.isArray(mod.authorLinks))mod.authorLinks=la;saveEditData();});
-t1.addEventListener('click',function(e){e.stopPropagation();});
-var u1=document.createElement('span');
-u1.className='editable-field';
-u1.contentEditable='true';
-u1.textContent=link.url||'';
-u1.style.minWidth='100px';
-u1.addEventListener('blur',function(){link.url=u1.textContent.trim();if(!Array.isArray(mod.authorLinks))mod.authorLinks=la;saveEditData();});
-u1.addEventListener('click',function(e){e.stopPropagation();});
-var db=document.createElement('button');
-db.className='modal-link-edit-delete';
-db.innerHTML='&times;';
-db.addEventListener('click',function(){la.splice(idx,1);mod.authorLinks=la;saveEditData();openModal(mod);});
-row.appendChild(t1);
-row.appendChild(document.createTextNode(': '));
-row.appendChild(u1);
-row.appendChild(db);
-lc.appendChild(row);
-});
-var alb=document.createElement('button');
-alb.className='modal-edit-add-btn';
-alb.textContent='+ 作者链接';
-alb.addEventListener('click',async function(){
-var t=await showEditPopup('链接文字','');
-if(t===null)return;
-var u=await showEditPopup('链接URL','');
-if(u===null)return;
-la.push({text:t||'链接',url:u||''});
-mod.authorLinks=la;
-saveEditData();
-openModal(mod);
-});
-lc.appendChild(alb);
-modalLinks.appendChild(lc);
-}else{
-if(mod.authorLinks){
-if(Array.isArray(mod.authorLinks)){
-mod.authorLinks.forEach(function(l){
-if(l.text&&l.url){
-var a=document.createElement('a');
-a.className='modal-link';
-a.href=l.url;
-a.target='_blank';
-a.rel='noopener noreferrer';
-a.textContent=l.text;
-modalLinks.appendChild(a);
-}
-});
-}else{
-[{name:'Twitter',url:mod.authorLinks.twitter},{name:'Pixiv',url:mod.authorLinks.pixiv},{name:'Bilibili',url:mod.authorLinks.bilibili}].forEach(function(l){
-if(l.url){
-var a=document.createElement('a');
-a.className='modal-link';
-a.href=l.url;
-a.target='_blank';
-a.rel='noopener noreferrer';
-a.textContent=l.name;
-modalLinks.appendChild(a);
-}
-});
-}
-}
-}
-
-downloadButtons.innerHTML='';
-var dls=mod.downloadLinks&&mod.downloadLinks.length?mod.downloadLinks:(mod.downloadUrl?[{text:'下载',url:mod.downloadUrl}]:[]);
-if(editMode){
-var dlc=document.createElement('div');
-dlc.style.cssText='display:flex;flex-direction:column;gap:6px';
-dls.forEach(function(dl,idx){
-var row=document.createElement('div');
-row.className='modal-link-edit-row';
-var t1=document.createElement('span');
-t1.className='editable-field';
-t1.contentEditable='true';
-t1.textContent=dl.text||'';
-t1.style.cssText='min-width:50px;max-width:80px';
-t1.addEventListener('blur',function(){dl.text=t1.textContent.trim();saveEditData();});
-t1.addEventListener('click',function(e){e.stopPropagation();});
-var u1=document.createElement('span');
-u1.className='editable-field';
-u1.contentEditable='true';
-u1.textContent=dl.url||'';
-u1.style.minWidth='100px';
-u1.addEventListener('blur',function(){dl.url=u1.textContent.trim();saveEditData();});
-u1.addEventListener('click',function(e){e.stopPropagation();});
-var db=document.createElement('button');
-db.className='modal-link-edit-delete';
-db.innerHTML='&times;';
-db.addEventListener('click',function(){dls.splice(idx,1);mod.downloadLinks=dls;saveEditData();openModal(mod);});
-row.appendChild(t1);
-row.appendChild(document.createTextNode(': '));
-row.appendChild(u1);
-row.appendChild(db);
-dlc.appendChild(row);
-});
-if(!mod.downloadLinks)mod.downloadLinks=dls;
-var adb=document.createElement('button');
-adb.className='modal-edit-add-btn';
-adb.textContent='+ 下载链接';
-adb.addEventListener('click',async function(){
-var t=await showEditPopup('按钮文字','');
-if(t===null)return;
-var u=await showEditPopup('下载URL','');
-if(u===null)return;
-dls.push({text:t||'下载',url:u||''});
-mod.downloadLinks=dls;
-saveEditData();
-openModal(mod);
-});
-dlc.appendChild(adb);
-downloadButtons.appendChild(dlc);
-}else{
-dls.forEach(function(dl){
-var b=document.createElement('a');
-b.className='download-btn-item';
-b.href=dl.url;
-b.target='_blank';
-b.rel='noopener noreferrer';
-b.textContent=dl.text;
-downloadButtons.appendChild(b);
-});
-}
-
-if(editMode){
-var es=document.getElementById('editUrlSection');
-if(es)es.remove();
-var us=document.createElement('div');
-us.className='modal-edit-url-section';
-us.id='editUrlSection';
-if(!Array.isArray(mod.previewImages))mod.previewImages=[];
-if(!Array.isArray(mod.previewVideos))mod.previewVideos=[];
-if(!Array.isArray(mod.coverImage))mod.coverImage=mod.coverImage?[mod.coverImage]:[];
-function buildList(arr,label,onAdd){
-var h=document.createElement('h4');
-h.textContent=label;
-us.appendChild(h);
-var c=document.createElement('div');
-(function render(){
-c.innerHTML='';
-arr.forEach(function(it,idx){
-var url=(typeof it==='string')?it:((it.urls&&it.urls[0])||it.url||'');
-var r=document.createElement('div');
-r.className='modal-edit-url-row';
-var inp=document.createElement('input');
-inp.type='text';
-inp.value=url;
-inp.placeholder='URL';
-inp.addEventListener('blur',function(){
-var v=inp.value.trim();
-if(typeof arr[idx]==='object'&&arr[idx].urls)arr[idx].urls=v?[v]:[];
-else arr[idx]=v;
-saveEditData();
-});
-var del=document.createElement('button');
-del.className='modal-link-edit-delete';
-del.innerHTML='&times;';
-del.addEventListener('click',function(){arr.splice(idx,1);saveEditData();render();});
-r.appendChild(inp);
-r.appendChild(del);
-c.appendChild(r);
-});
-var ab=document.createElement('button');
-ab.className='modal-edit-add-btn';
-ab.textContent='+ '+label;
-ab.addEventListener('click',onAdd);
-c.appendChild(ab);
-})();
-us.appendChild(c);
-}
-buildList(mod.previewImages,'预览图片URL',async function(){
-var u=await showEditPopup('输入图片URL','');
-if(u){mod.previewImages.push(u);saveEditData();openModal(mod);}
-});
-buildList(mod.previewVideos,'预览视频URL',async function(){
-var u=await showEditPopup('输入视频URL','');
-if(u){mod.previewVideos.push(u);saveEditData();openModal(mod);}
-});
-buildList(mod.coverImage,'封面图URL',async function(){
-var u=await showEditPopup('输入封面图URL','');
-if(u){mod.coverImage.push(u);saveEditData();openModal(mod);}
-});
-var h4s=us.querySelectorAll('h4');
-if(h4s[1])h4s[1].style.marginTop='12px';
-if(h4s[2])h4s[2].style.marginTop='12px';
-var ps=document.querySelector('.preview-section');
-if(ps&&ps.nextSibling)ps.parentNode.insertBefore(us,ps.nextSibling);
-else if(ps)ps.parentNode.appendChild(us);
-}else{
-var es2=document.getElementById('editUrlSection');
-if(es2)es2.remove();
-}
-
-activePreviewTab=null;
-updatePreviewButtons();
-renderPreviewContent();
-
-modalOverlay.classList.add('active');
-document.body.style.overflow='hidden';
-setTimeout(function(){
-if(!editMode&&modalDescText.scrollHeight>modalDescText.clientHeight+2){
-descToggle.style.display='inline-block';
-}
-},50);
-}
-
-function closeModal(){
-modalOverlay.classList.remove('active');
-document.body.style.overflow='';
-currentMod=null;
-activePreviewTab=null;
-ridDropdown.style.display='none';
-if(!editMode){cleanupPendingVideos();}
-const modalCoverImg=document.getElementById('modalCoverImg');
-if(modalCoverImg){modalCoverImg.src='';modalCoverImg.onclick=null;}
-var es=document.getElementById('editUrlSection');
-if(es)es.remove();
-if(editMode){renderModCards(modData);paginationEl.innerHTML='';}
-}
-
-modalClose.addEventListener('click', closeModal);
-  modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeModal(); });
-  descToggle.addEventListener('click', function() {
-    const expanded = modalDescText.classList.toggle('expanded');
-    descToggle.textContent = expanded ? '收起' : '展开全文';
-  });
-  lightboxClose.addEventListener('click', function() { lightboxOverlay.classList.remove('active'); });
-  lightboxOverlay.addEventListener('click', function(e) { if (e.target === lightboxOverlay) lightboxOverlay.classList.remove('active'); });
-
-  document.addEventListener('click', function(e) {
-    if (!modalRidWrap.contains(e.target)) {
-      ridDropdown.style.display = 'none';
+  // ===== 预览渲染 =====
+  function rPI(imgs) {
+    if (!imgs || !imgs.length) return '<div class="pe">暂无图片预览资源</div>';
+    var h = '<div class="pig">';
+    for (var i = 0; i < imgs.length; i++) {
+      h += '<img class="pii" src="' + imgs[i] + '" onclick="window._oLB(this.src)" onerror="this.style.display=\'none\'">';
     }
-  });
-
-  function handleTagClick(tagText) {
-    searchInput.value = tagText;
-
-    filterMods();
-    searchInput.focus();
+    return h + '</div>';
   }
 
-  function attachCardSpinner(cardElement) {
-    const coverInner = cardElement.querySelector('.mod-cover-inner');
-    const coverImg = coverInner ? coverInner.querySelector('.mod-cover-img') : null;
-    if (!coverInner || !coverImg) return;
+  function rPV(vids) {
+    if (!vids || !vids.length) return '<div class="pe">暂无视频预览资源</div>';
+    var h = '<div class="pvl">';
+    for (var i = 0; i < vids.length; i++) {
+      h += '<video class="pvi" controls preload="metadata" src="' + vids[i] + '"></video>';
+    }
+    return h + '</div>';
+  }
 
-    if (coverImg.complete && coverImg.naturalWidth > 0) {
-      return;
+  // ===== 详情模态框（参考版本） =====
+  function oM(mod) {
+    currentMod = mod;
+    var cl = cLL(mod.downloadLinks), h = '';
+    var cs = gCS(mod);
+    if (cs) h += '<div class="miw"><img class="mii" src="' + cs + '" alt="' + esc(mod.title) + '" onclick="window._oLB(this.src)" onerror="this.parentElement.style.display=\'none\'"></div>';
+    h += '<h2 class="mit">' + esc(mod.title) + '</h2>';
+    h += '<div class="mml">';
+    h += '<span class="mmi">' + esc(mod.badge) + '</span><span class="mms">·</span>';
+    h += '<span class="mmi">' + esc(mod.size) + '</span><span class="mms">·</span>';
+    h += '<span class="mmi">' + esc(mod.date) + '</span><span class="mms">·</span>';
+    h += '<span class="mmi">axxxx.cyou</span>';
+    h += '</div>';
+    h += '<div class="mrg-wrap">';
+    h += '<span class="mr"><span class="mrt">RID ' + mod.id + '</span></span>';
+    h += '<a class="mra" onclick="event.preventDefault();window._cPT(\'RID:' + mod.id + '\').then(function(){window._sTM(\'RID已复制\')})" title="复制RID">' + coS + '复制</a>';
+    h += '<a class="mra" onclick="event.preventDefault();window._cPT(\'https://axxxx.cyou/?rid=' + mod.id + '\').then(function(){window._sTM(\'分享链接已复制\')})" title="复制分享链接">' + shS + '分享</a>';
+    h += '</div>';
+    if (mod.tags && mod.tags.length) {
+      h += '<div class="mts">';
+      mod.tags.forEach(function (t) { h += '<span class="mtg ' + t.toLowerCase() + '">' + esc(t) + '</span>'; });
+      h += '</div>';
+    }
+    h += '<div class="dsl"><span>简介</span></div>';
+    var de = (mod.description || '暂无介绍').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    de = de.replace(/(https?:\/\/[^\s<"]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    h += '<div class="mde"><div class="dt" id="dT">' + de + '</div><span class="dto" id="dO" style="display:none">展开全文</span></div>';
+
+    h += '<div class="sl"><span>下载方式</span></div>';
+    h += '<div class="dsw ls"><div class="sh" onclick="window._tS(this)"><span class="st">最新版本<span class="sc">(' + cl.latest.length + ')</span></span><span class="sa2 op">▾</span></div><div class="sb"><div class="sbi">';
+    if (cl.latest.length) {
+      cl.latest.forEach(function (dl, i) {
+        h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="' + dl.url + '" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
+        if (i === 0) h += '<span class="dm">' + esc(mod.badge) + ' · ' + esc(mod.size) + ' · ' + esc(mod.date) + '</span>';
+        h += '</div>';
+        if (dl.desc) h += '<div class="id" id="lD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="lD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
+        h += '</div><a class="db" href="' + dl.url + '" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+      });
+    } else {
+      h += '<div class="eh">暂无直接下载链接</div>';
+    }
+    h += '</div></div></div>';
+
+    if (cl.alternative.length) {
+      h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">其他下载方式<span class="sc">(' + cl.alternative.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
+      cl.alternative.forEach(function (dl, i) {
+        h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="' + dl.url + '" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span></div>';
+        if (dl.desc) h += '<div class="id" id="aD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="aD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
+        h += '</div><a class="db" href="' + dl.url + '" target="_blank" rel="noopener noreferrer">' + dlS + '前往</a></div>';
+      });
+      h += '</div></div></div>';
     }
 
-    const spinner = document.createElement('span');
-    spinner.className = 'card-spinner';
-    const hideSpinner = function() {
-      if (spinner.parentNode) {
-        spinner.style.display = 'none';
-        spinner.remove();
+    h += '<div class="sl"><span>更多</span></div>';
+    h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">历史版本<span class="sc">' + (cl.history.length ? '(' + cl.history.length + ')' : '') + '</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
+    if (cl.history.length) {
+      cl.history.forEach(function (dl, i) {
+        h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="' + dl.url + '" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span></div>';
+        if (dl.desc) h += '<div class="id" id="hD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="hD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
+        h += '</div><a class="db" href="' + dl.url + '" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+      });
+    } else {
+      h += '<div class="eh">暂无历史版本</div>';
+    }
+    h += '</div></div></div>';
+
+    var au = pA(mod.author || '佚名'), awl = mLA(au, mod.authorLinks || []), is = awl.length === 1 && !awl[0].role;
+    h += '<div class="sl"><span>作者</span></div><div class="as' + (is ? ' sa' : '') + '">';
+    awl.forEach(function (a) {
+      h += '<div class="ar">';
+      if (a.role) h += '<span class="arl ' + gRC(a.role) + '">' + esc(a.role) + '</span>';
+      h += '<span class="an">' + esc(a.name) + '</span>';
+      if (a.links && a.links.length) {
+        a.links.forEach(function (l) {
+          var p = gPI(l.text, l.url);
+          h += '<a class="alt ' + p.c + '" href="' + l.url + '" target="_blank" rel="noopener noreferrer">' + esc(p.n) + '</a>';
+        });
       }
-    };
+      h += '</div>';
+    });
+    h += '</div>';
 
-    coverImg.addEventListener('load', hideSpinner, { once: true });
-    coverImg.addEventListener('error', hideSpinner, { once: true });
+    h += '<div class="sl"><span>预览</span></div>';
+    var hi = mod.previewImages && mod.previewImages.length > 0, hv = mod.previewVideos && mod.previewVideos.length > 0;
+    if (hi && hv) {
+      h += '<div class="ps"><button class="pt act" id="pIT" onclick="window._sP(\'images\')">' + imS + ' 预览图片<span class="pc">(' + mod.previewImages.length + ')</span></button><button class="pt" id="pVT" onclick="window._sP(\'videos\')">' + viS + ' 预览视频<span class="pc">(' + mod.previewVideos.length + ')</span></button></div><div id="pA"><div class="pp">' + rPI(mod.previewImages) + '</div></div>';
+    } else if (hi) {
+      h += '<div class="psg">' + imS + ' 预览图片<span class="psgc">(' + mod.previewImages.length + ')</span></div><div class="pp">' + rPI(mod.previewImages) + '</div>';
+    } else if (hv) {
+      h += '<div class="psg">' + viS + ' 预览视频<span class="psgc">(' + mod.previewVideos.length + ')</span></div><div class="pp">' + rPV(mod.previewVideos) + '</div>';
+    } else {
+      h += '<div class="pe">该MOD暂无预览资源</div>';
+    }
 
-    setTimeout(function() {
-      if (coverImg.complete) hideSpinner();
-    }, 500);
+    mC.innerHTML = h;
+    mO.classList.add('act');
+    document.body.style.overflow = 'hidden';
+    mO.scrollTop = 0;
 
-    coverInner.appendChild(spinner);
+    var dTe = document.getElementById('dT'), dO = document.getElementById('dO');
+    if (dTe && dO) {
+      cOF(dTe, dO);
+      dO.addEventListener('click', function () {
+        var e = dTe.classList.toggle('exp');
+        dO.textContent = e ? '收起' : '展开全文';
+      });
+    }
+    setTimeout(function () {
+      document.querySelectorAll('.id').forEach(function (el) {
+        var tg = el.nextElementSibling;
+        if (tg && tg.classList.contains('idt')) cOF(el, tg);
+      });
+    }, 100);
+
+    window._cm = mod;
+    window._ap = hi && hv ? 'images' : null;
+
+    if (isEditMode) {
+      makeModalEditable(mod);
+    }
   }
 
-  function renderModCards(dataArray){
-modGrid.innerHTML='';
-if(dataArray.length===0){
-modGrid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--text-muted);">没有找到相关MOD</div>';
-return;
-}
-const loaded2Src=window.loaded2GifSrc||FALLBACK_LOADED2;
-const fbSvg="data:image/svg+xml;charset=UTF-8,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%239a92a5' stroke-width='3'><circle cx='24' cy='24' r='20'/><path d='M24 16v12'/><circle cx='24' cy='32' r='2' fill='%239a92a5'/></svg>");
-dataArray.forEach(function(mod){
-let coverImgSrc='';
-if(mod.coverImage){
-if(Array.isArray(mod.coverImage))coverImgSrc=mod.coverImage[0]||'';
-else coverImgSrc=mod.coverImage;
-}
-const hasCoverImg=coverImgSrc.trim()!=='';
-const imgSrc=hasCoverImg?fbSvg:loaded2Src;
-const imgStyle=hasCoverImg?'object-fit: cover;':'object-fit: contain;';
+  function cM() {
+    mO.classList.remove('act');
+    document.body.style.overflow = '';
+    currentMod = null;
+    activePreviewTab = null;
+  }
+  mX.addEventListener('click', cM);
+  mO.addEventListener('click', function (e) { if (e.target === mO) cM(); });
 
-let tagsHtml='';
-if(mod.tags&&mod.tags.length){
-tagsHtml='<div class="mod-tag-list">'+mod.tags.map(function(t,i){
-return '<span class="mod-tag-item '+t.toLowerCase()+'" data-tag-index="'+i+'">'+t+(editMode?'<span class="tag-delete-btn" data-tag-index="'+i+'"> \u00d7</span>':'')+'</span>';
-}).join('')+(editMode?'<button class="mod-tag-add-btn" data-mod-id="'+mod.id+'">+</button>':'')+'</div>';
-}else{
-tagsHtml='<div class="mod-tag-list">'+(editMode?'<button class="mod-tag-add-btn" data-mod-id="'+mod.id+'">+ 标签</button>':'')+'</div>';
-}
+  // ===== 全局函数暴露（供内联事件调用） =====
+  window._oLB = oLB;
+  window._cPT = copyText;
+  window._sTM = showToast;
+  window._tS = function (el) {
+    var b = el.nextElementSibling, a = el.querySelector('.sa2'), c = b.classList.contains('co');
+    if (c) {
+      b.classList.remove('co');
+      b.style.maxHeight = b.scrollHeight + 'px';
+      a.classList.add('op');
+    } else {
+      b.style.maxHeight = b.scrollHeight + 'px';
+      requestAnimationFrame(function () {
+        b.classList.add('co');
+        a.classList.remove('op');
+      });
+    }
+  };
+  window._tID = function (el) {
+    var tid = el.getAttribute('data-target'), de = document.getElementById(tid);
+    if (!de) return;
+    var e = de.classList.toggle('exp');
+    el.textContent = e ? '收起' : '展开';
+    var sb = de.closest('.sb');
+    if (sb && !sb.classList.contains('co')) sb.style.maxHeight = sb.scrollHeight + 'px';
+  };
+  window._sP = function (tab) {
+    var mod = window._cm;
+    if (!mod) return;
+    var a = document.getElementById('pA');
+    if (!a) return;
+    var it = document.getElementById('pIT'), vt = document.getElementById('pVT');
+    if (window._ap === tab) return;
+    window._ap = tab;
+    if (it) it.classList.toggle('act', tab === 'images');
+    if (vt) vt.classList.toggle('act', tab === 'videos');
+    a.innerHTML = '<div class="pp">' + (tab === 'images' ? rPI(mod.previewImages) : rPV(mod.previewVideos)) + '</div>';
+  };
 
-var ec=editMode?'<input type="checkbox" class="mod-card-edit-check" '+(selectedCardIds.has(mod.id)?'checked':'')+' data-mod-id="'+mod.id+'"><button class="mod-card-edit-delete" data-mod-id="'+mod.id+'" title="删除">\u00d7</button><button class="mod-card-edit-cover-btn" data-mod-id="'+mod.id+'">换封面</button><button class="mod-card-edit-badge-btn" data-mod-id="'+mod.id+'">Badge</button>':'';
+  // ===== 搜索功能（保留原站逻辑） =====
+  async function performGlobalRidSearch(rid) {
+    var categories = ['all', 'skin'];
 
-var th,mh;
-if(editMode){
-th='<div class="mod-title editable-field" contenteditable="true" data-field="title" data-mod-id="'+mod.id+'">'+(mod.title||'')+'</div>';
-mh='<div class="mod-meta"><span class="mod-meta-tag">大小 <span class="editable-field" contenteditable="true" data-field="size" data-mod-id="'+mod.id+'">'+(mod.size||'')+'</span></span><span class="mod-meta-tag">日期 <span class="editable-field" contenteditable="true" data-field="date" data-mod-id="'+mod.id+'">'+(mod.date||'')+'</span></span></div>';
-}else{
-th='<div class="mod-title">'+mod.title+'</div>';
-mh='<div class="mod-meta"><span class="mod-meta-tag">大小 '+mod.size+'</span><span class="mod-meta-tag">日期 '+mod.date+'</span></div>';
-}
-
-const card=document.createElement('div');
-card.className='mod-card'+(editMode?' edit-mode':'');
-card.dataset.modId=mod.id;
-card.innerHTML=
-'<div class="mod-cover">'+
-'<div class="mod-cover-inner">'+
-'<div class="mod-cover-gradient" style="background:'+mod.coverGradient+';"></div>'+
-'<img src="'+imgSrc+'" alt="'+mod.title+'" class="mod-cover-img"'+
-' style="position:absolute; width:100%; height:100%; '+imgStyle+' z-index:2; border-radius:inherit;"'+
-' onerror="this.onerror=null; this.src=\''+fbSvg+'\'; this.style.opacity=0.4;">'+
-'</div>'+
-'<span class="mod-badge '+mod.badgeClass+'">'+mod.badge+'</span>'+ec+
-'</div>'+
-'<div class="mod-info">'+
-th+tagsHtml+mh+
-'<button class="mod-download-btn view-detail-btn">查看详情</button>'+
-'</div>';
-
-const coverImgEl=card.querySelector('.mod-cover-img');
-if(coverImgEl&&hasCoverImg){
-coverImgEl.addEventListener('click',function(e){
-e.stopPropagation();
-if(coverImgEl.src&&coverImgEl.src.indexOf('data:image/svg')===-1)openLightbox(coverImgEl.src);
-});
-ImageLoadQueue.enqueue(function(){
-return new Promise(function(resolve){
-const img=new Image();
-img.onload=function(){coverImgEl.src=coverImgSrc;resolve();};
-img.onerror=function(){resolve();};
-img.src=coverImgSrc;
-});
-});
-}
-
-card.querySelector('.view-detail-btn').addEventListener('click',function(e){e.stopPropagation();openModal(mod);});
-
-if(!editMode){
-card.querySelectorAll('.mod-tag-item').forEach(function(tagEl){
-tagEl.addEventListener('click',function(e){e.stopPropagation();handleTagClick(tagEl.textContent);});
-});
-}
-
-if(editMode){
-var chk=card.querySelector('.mod-card-edit-check');
-chk.addEventListener('change',function(e){
-e.stopPropagation();
-if(e.target.checked)selectedCardIds.add(mod.id);
-else selectedCardIds.delete(mod.id);
-updateExportSelectedBtn();
-});
-chk.addEventListener('click',function(e){e.stopPropagation();});
-
-card.querySelector('.mod-card-edit-delete').addEventListener('click',function(e){
-e.stopPropagation();
-if(confirm('确定删除"'+mod.title+'"吗？')){
-modData=modData.filter(function(m){return m.id!==mod.id;});
-baseModData=modData;
-selectedCardIds.delete(mod.id);
-saveEditData();
-renderModCards(modData);
-paginationEl.innerHTML='';
-}
-});
-
-card.querySelector('.mod-card-edit-cover-btn').addEventListener('click',async function(e){
-e.stopPropagation();
-var cu=Array.isArray(mod.coverImage)?(mod.coverImage[0]||''):(mod.coverImage||'');
-var u=await showEditPopup('输入封面图URL',cu);
-if(u!==null){mod.coverImage=u?[u]:[];saveEditData();renderModCards(modData);paginationEl.innerHTML='';}
-});
-
-card.querySelector('.mod-card-edit-badge-btn').addEventListener('click',async function(e){
-e.stopPropagation();
-var nb=await showEditPopup('输入Badge文字',mod.badge||'');
-if(nb!==null){mod.badge=nb;saveEditData();renderModCards(modData);paginationEl.innerHTML='';}
-});
-
-card.querySelectorAll('.tag-delete-btn').forEach(function(b){
-b.addEventListener('click',function(e){
-e.stopPropagation();
-var i=parseInt(b.dataset.tagIndex);
-if(mod.tags){mod.tags.splice(i,1);saveEditData();renderModCards(modData);paginationEl.innerHTML='';}
-});
-});
-
-card.querySelectorAll('.mod-tag-add-btn').forEach(function(b){
-b.addEventListener('click',async function(e){
-e.stopPropagation();
-var t=await showEditPopup('输入新标签','');
-if(t){if(!mod.tags)mod.tags=[];mod.tags.push(t);saveEditData();renderModCards(modData);paginationEl.innerHTML='';}
-});
-});
-
-card.querySelectorAll('.editable-field').forEach(function(el){
-el.addEventListener('blur',function(){
-var f=el.dataset.field,mid=el.dataset.modId;
-var mi=modData.find(function(m){return m.id===mid;});
-if(!mi)return;
-var v=el.textContent.trim();
-if(f==='title')mi.title=v;
-else if(f==='size')mi.size=v;
-else if(f==='date')mi.date=v;
-saveEditData();
-});
-el.addEventListener('click',function(e){e.stopPropagation();});
-el.addEventListener('mousedown',function(e){e.stopPropagation();});
-});
-}
-
-modGrid.appendChild(card);
-attachCardSpinner(card);
-});
-}
-
-async function performGlobalRidSearch(rid) {
-    const categories = ['all', 'skin'];
-
-    for (const cat of categories) {
+    for (var i = 0; i < categories.length; i++) {
+      var cat = categories[i];
       if (allSiteData[cat]) {
-        const found = allSiteData[cat].find(function(m) { return m.id === rid; });
+        var found = allSiteData[cat].find(function (m) { return m.id === rid; });
         if (found) return found;
       }
     }
 
-    for (const cat of categories) {
-      if (!allSiteData[cat]) {
-        await loadAllDataForCategory(cat);
+    for (var j = 0; j < categories.length; j++) {
+      var cat2 = categories[j];
+      if (!allSiteData[cat2]) {
+        await loadAllDataForCategory(cat2);
       }
-      if (allSiteData[cat]) {
-        const found = allSiteData[cat].find(function(m) { return m.id === rid; });
-        if (found) return found;
+      if (allSiteData[cat2]) {
+        var found2 = allSiteData[cat2].find(function (m) { return m.id === rid; });
+        if (found2) return found2;
       }
     }
+
     return null;
   }
 
-  function filterMods(){
-let filtered=baseModData.slice();
-const query=searchInput.value.trim();
-if(query){
-const lowerQuery=query.toLowerCase();
-if(lowerQuery.startsWith('rid:')){
-const ridPart=lowerQuery.slice(4).trim();
-performGlobalRidSearch(ridPart).then(function(found){
-if(found){
-openModal(found);
-searchInput.value='';
-searchDropdown.classList.remove('active');
-}else{
-modGrid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--text-muted);">未找到该 RID</div>';
-paginationEl.innerHTML='';
-}
-});
-return;
-}else if(/^\d+$/.test(query)){
-performGlobalRidSearch(query).then(function(found){
-if(found){
-openModal(found);
-searchInput.value='';
-searchDropdown.classList.remove('active');
-}else{
-modGrid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--text-muted);">未找到该 RID</div>';
-paginationEl.innerHTML='';
-}
-});
-return;
-}else{
-filtered=filtered.filter(function(m){
-if(m.title.toLowerCase().includes(lowerQuery))return true;
-if(m.tags&&m.tags.some(function(tag){return tag.toLowerCase().includes(lowerQuery);}))return true;
-return false;
-});
-}
-}
-currentPage=1;
-modData=filtered;
-if(editMode){
-renderModCards(filtered);
-paginationEl.innerHTML='';
-}else{
-renderPage(1);
-}
-updateSearchDropdown(query);
-}
+  function filterMods() {
+    var filtered = baseModData.slice();
+    var query = sI.value.trim();
 
-function updateSearchDropdown(query) {
+    if (query) {
+      var lowerQuery = query.toLowerCase();
+
+      if (lowerQuery.startsWith('rid:')) {
+        var ridPart = lowerQuery.slice(4).trim();
+        performGlobalRidSearch(ridPart).then(function (found) {
+          if (found) {
+            oM(found);
+            sI.value = '';
+            searchDropdown.classList.remove('active');
+          } else {
+            mG.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--tm)">未找到该 RID</div>';
+            paginationEl.innerHTML = '';
+          }
+        });
+        return;
+      } else if (/^\d+$/.test(query)) {
+        performGlobalRidSearch(query).then(function (found) {
+          if (found) {
+            oM(found);
+            sI.value = '';
+            searchDropdown.classList.remove('active');
+          } else {
+            mG.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--tm)">未找到该 RID</div>';
+            paginationEl.innerHTML = '';
+          }
+        });
+        return;
+      } else {
+        filtered = filtered.filter(function (m) {
+          if (m.title.toLowerCase().includes(lowerQuery)) return true;
+          if (m.tags && m.tags.some(function (tag) { return tag.toLowerCase().includes(lowerQuery); })) return true;
+          return false;
+        });
+      }
+    }
+
+    currentPage = 1;
+    modData = filtered;
+    preloadState.currentPreloadPage = 0;
+    renderPage(1);
+    updateSearchDropdown(query);
+  }
+
+  function updateSearchDropdown(query) {
     searchDropdown.innerHTML = '';
-    if (!query || query.length < 1) { searchDropdown.classList.remove('active'); return; }
-    const lowerQuery = query.toLowerCase();
-    if (lowerQuery.startsWith('rid:') || /^\d+$/.test(query)) { searchDropdown.classList.remove('active'); return; }
-    const matches = modData.filter(function(m) {
+    if (!query || query.length < 1) {
+      searchDropdown.classList.remove('active');
+      return;
+    }
+
+    var lowerQuery = query.toLowerCase();
+    if (lowerQuery.startsWith('rid:') || /^\d+$/.test(query)) {
+      searchDropdown.classList.remove('active');
+      return;
+    }
+
+    var matches = modData.filter(function (m) {
       if (m.title.toLowerCase().includes(lowerQuery)) return true;
-      if (m.tags && m.tags.some(function(tag) { return tag.toLowerCase().includes(lowerQuery); })) return true;
+      if (m.tags && m.tags.some(function (tag) { return tag.toLowerCase().includes(lowerQuery); })) return true;
       return false;
     });
+
     if (matches.length === 0) {
-      searchDropdown.innerHTML = '<li style="padding:16px;text-align:center;color:var(--text-muted);">没有找到相关MOD</li>';
+      searchDropdown.innerHTML = '<li style="padding:16px;text-align:center;color:var(--tm)">没有找到相关MOD</li>';
     } else {
-      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp('(' + escapedQuery + ')', 'gi');
-      matches.slice(0, 8).forEach(function(m) {
-        const li = document.createElement('li');
+      var escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var regex = new RegExp('(' + escapedQuery + ')', 'gi');
+      matches.slice(0, 8).forEach(function (m) {
+        var li = document.createElement('li');
         li.className = 'search-dropdown-item';
         li.innerHTML = m.title.replace(regex, '<mark>$1</mark>');
-        li.addEventListener('click', function() { searchInput.value = m.title; searchDropdown.classList.remove('active'); filterMods(); });
+        li.addEventListener('click', function () {
+          sI.value = m.title;
+          searchDropdown.classList.remove('active');
+          filterMods();
+        });
         searchDropdown.appendChild(li);
       });
     }
+
     searchDropdown.classList.add('active');
   }
 
-  async function loadModData(categoryKey){
-categoryKey=categoryKey||'all';
-currentPage=1;
-const loaded2Src=window.loaded2GifSrc||FALLBACK_LOADED2;
-modGrid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;"><img src="'+loaded2Src+'" alt="加载中" style="max-width:200px;"></div>';
-paginationEl.innerHTML='';
+  // ===== 分类切换 =====
+  async function loadModData(categoryKey) {
+    categoryKey = categoryKey || 'all';
+    currentPage = 1;
+    preloadState.currentPreloadPage = 0;
+    var loaded2Src = window.loaded2GifSrc || FALLBACK_LOADED2;
 
-let loadedData=[];
-const manifest=await loadManifest(categoryKey);
-const dirMap={all:'sts2_mods',skin:'O.o_interface'};
-const dir=dirMap[categoryKey];
+    if (allSiteData[categoryKey]) {
+      modData = allSiteData[categoryKey];
+      baseModData = modData;
+      sI.value = '';
+      searchDropdown.classList.remove('active');
+      renderPage(1);
+      return;
+    }
 
-if(manifest&&manifest[dir]){
-loadedData=await loadAllDataForCategory(categoryKey);
-}else{
-const url=dataSources[categoryKey];
-if(!url)return;
-try{
-if(dataCache[url]){
-loadedData=dataCache[url];
-}else{
-const controller=new AbortController();
-const timeoutId=setTimeout(function(){controller.abort();},8000);
-const response=await fetch(url,{signal:controller.signal});
-clearTimeout(timeoutId);
-if(!response.ok)throw new Error('加载失败');
-let rawData=await response.json();
-rawData=sortModsByTimeId(rawData);
-loadedData=rawData;
-dataCache[url]=loadedData;
-}
-}catch(error){
-modGrid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;">MOD数据加载失败，请稍后再试</div>';
-return;
-}
-}
+    mG.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;"><img src="' + loaded2Src + '" alt="加载中" style="max-width:200px;"></div>';
+    paginationEl.innerHTML = '';
 
-const ed=loadEditData(categoryKey);
-if(ed){
-loadedData=ed;
-allSiteData[categoryKey]=ed;
-}
+    var data = await loadAllDataForCategory(categoryKey);
+    if (data && data.length) {
+      modData = data;
+      baseModData = data;
+      sI.value = '';
+      searchDropdown.classList.remove('active');
+      renderPage(1);
+    } else {
+      mG.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;">MOD数据加载失败，请稍后再试</div>';
+    }
+  }
 
-modData=loadedData;
-baseModData=loadedData;
-searchInput.value='';
-searchDropdown.classList.remove('active');
-
-if(editMode){
-renderModCards(modData);
-paginationEl.innerHTML='';
-}else{
-renderPage(1);
-}
-}
-
-document.getElementById('categoryTags').addEventListener('click', function(e) {
-    const tag = e.target.closest('.category-tag');
-    if (!tag) return;
-    document.querySelectorAll('.category-tag').forEach(function(t) { t.classList.remove('active'); });
-    tag.classList.add('active');
-    activeCategory = tag.getAttribute('data-category') || 'all';
+  document.getElementById('categoryTabs').addEventListener('click', function (e) {
+    var tab = e.target.closest('.category-tab');
+    if (!tab) return;
+    document.querySelectorAll('.category-tab').forEach(function (t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    activeCategory = tab.getAttribute('data-category') || 'all';
     loadModData(activeCategory);
   });
 
-  searchInput.addEventListener('input', filterMods);
-  searchInput.addEventListener('focus', function() {
-    if (searchInput.value.trim().length >= 1) updateSearchDropdown(searchInput.value.trim());
+  // ===== 搜索事件 =====
+  sI.addEventListener('input', filterMods);
+  sI.addEventListener('focus', function () {
+    if (sI.value.trim().length >= 1) updateSearchDropdown(sI.value.trim());
   });
-  searchInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') { searchDropdown.classList.remove('active'); searchInput.blur(); }
-    if (e.key === 'Enter') { searchDropdown.classList.remove('active'); filterMods(); }
+  sI.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      searchDropdown.classList.remove('active');
+      sI.blur();
+    }
+    if (e.key === 'Enter') {
+      searchDropdown.classList.remove('active');
+      filterMods();
+    }
   });
-  document.addEventListener('click', function(e) {
+
+  document.addEventListener('click', function (e) {
     if (!searchContainer.contains(e.target)) searchDropdown.classList.remove('active');
   });
 
-  charaClose.addEventListener('click', function() { charaOverlay.classList.remove('active'); });
-  charaOverlay.addEventListener('click', function(e) { if (e.target === charaOverlay) charaOverlay.classList.remove('active'); });
+  // ===== 窗口大小调整 =====
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (modData.length > 0) {
+        renderPagination(modData.length, currentPage);
+      }
+    }, 200);
+  });
 
-  function openCharaDetail() {
-    if (logoImg.src && logoImg.style.display !== 'none') { charaImg.src = logoImg.src; }
-    else { charaImg.src = ''; }
-    charaOverlay.classList.add('active');
+  // ===== 菜单 toggle =====
+  if (menuBtn && menuPanel) {
+    menuBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      menuPanel.classList.toggle('open');
+    });
+    document.addEventListener('click', function (e) {
+      if (menuPanel.classList.contains('open') && !menuPanel.contains(e.target) && e.target !== menuBtn) {
+        menuPanel.classList.remove('open');
+      }
+    });
   }
 
-    async function handleUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    const rid = params.get('rid');
+  // ===== 暗黑模式 =====
+  var DARK_KEY = 'sts2_dark_mode';
+  function applyTheme(isDark) {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      if (themeIconSun) themeIconSun.style.display = 'none';
+      if (themeIconMoon) themeIconMoon.style.display = 'block';
+    } else {
+      document.documentElement.classList.remove('dark');
+      if (themeIconSun) themeIconSun.style.display = 'block';
+      if (themeIconMoon) themeIconMoon.style.display = 'none';
+    }
+  }
+  var savedDark = localStorage.getItem(DARK_KEY) === '1';
+  applyTheme(savedDark);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem(DARK_KEY, isDark ? '1' : '0');
+      applyTheme(isDark);
+      if (menuPanel) menuPanel.classList.remove('open');
+    });
+  }
+
+  // ===== URL参数处理（RID跳转） =====
+  async function handleUrlParams() {
+    var params = new URLSearchParams(window.location.search);
+    var rid = params.get('rid');
     if (rid) {
-      const found = await performGlobalRidSearch(rid);
+      var found = await performGlobalRidSearch(rid);
       if (found) {
-        openModal(found);
+        oM(found);
       } else {
         showToast('未找到该帖子');
       }
-
       history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
-    async function initPage() {
-    let loadingGifUrls = [
-      'https://cdn.jsdmirror.com/gh/eyteamd-max/HTML-full-linked-html-/loaded.gif'
+  // ===== 初始化 =====
+  async function initPage() {
+    var loadingGifUrls = [
+      'http://shp.qpic.cn/collector/1976464052/8ca28b73-c355-4abe-92e8-d4da82b9c560/0',
+      'https://p.qpic.cn/psn_labels/ayJapABWAwW4hmBFXiaqn7icrqSOuPYeSRQw4iaPl6ZCFxU66CiaGkhEicLCnEibnfSRX2T4Zhze15Rbg/0'
     ];
-    let logoUrls = [
-      'https://cdn.jsdmirror.com/gh/eyteamd-max/HTML-full-linked-html-/Lihui.gif'
-    ];
-    let loaded2GifUrls = [
+    var loaded2GifUrls = [
       'http://shp.qpic.cn/collector/1976464052/35195f23-993a-4bae-a95b-b01054c9aa2c/0',
-      'https://cdn.jsdmirror.com/gh/eyteamd-max/HTML-full-linked-html-/loaded_2.gif',
-      'https://cdn.jsdelivr.net/gh/eyteamd-max/HTML-full-linked-html-/loaded_2.gif'
+      'https://p.qpic.cn/psn_labels/ayJapABWAwW4hmBFXiaqn7icrqSOuPYeSRb8kvrUia3vonmc1Qke2xRzZticdf6bkIGYzicc43F7x6RI/0'
     ];
 
     try {
-      const fetchWithTimeout = Promise.race([
+      var fetchWithTimeout = Promise.race([
         fetch('resources/json/config.json', { cache: 'no-store' }),
-        new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 3000); })
+        new Promise(function (_, reject) {
+          setTimeout(function () { reject(new Error('timeout')); }, 3000);
+        })
       ]);
-      const resp = await fetchWithTimeout;
+      var resp = await fetchWithTimeout;
       if (resp.ok) {
-        const config = await resp.json();
+        var config = await resp.json();
         if (config.loadingGifUrls && config.loadingGifUrls.length) loadingGifUrls = config.loadingGifUrls;
-        if (config.logoUrls && config.logoUrls.length) logoUrls = config.logoUrls;
         if (config.loaded2GifUrls && config.loaded2GifUrls.length) loaded2GifUrls = config.loaded2GifUrls;
       }
     } catch (e) {}
 
-    const gifPromise = raceImage(loadingGifUrls).catch(function() { return null; });
-
-    const logoPromise = (async function loadLogoWithRetry() {
-      let lastErr;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          return await raceImage(logoUrls);
-        } catch (err) {
-          lastErr = err;
-          if (attempt < 2) {
-            await new Promise(function(resolve) { setTimeout(resolve, 2000); });
-          }
-        }
-      }
-      return null;
-    })();
-
-    const loaded2Promise = raceImage(loaded2GifUrls).catch(function() { return null; });
-
-    (async function preloadCampaign() {
-      try {
-        const [allData, skinData] = await Promise.all([
-          loadAllDataForCategory('all'),
-          loadAllDataForCategory('skin')
-        ]);
-
-        const allMods = allData.concat(skinData);
-        const coverUrls = [];
-        const previewImgUrls = [];
-
-        const PRELOAD_PAGES = 2;
-        const PRELOAD_DEPTH = ITEMS_PER_PAGE * PRELOAD_PAGES;
-
-        allMods.forEach(function(mod, idx) {
-          if (mod.coverImage) {
-            const url = Array.isArray(mod.coverImage) ? (mod.coverImage[0] || '') : mod.coverImage;
-            if (url.trim()) coverUrls.push(url);
-          }
-
-          if (idx < PRELOAD_DEPTH && Array.isArray(mod.previewImages)) {
-            mod.previewImages.slice(0, 4).forEach(function(item) {
-              const urls = toCandidates(item);
-              if (urls.length && urls[0]) previewImgUrls.push(urls[0]);
-            });
-          }
-        });
-
-        preloadImagesWithConcurrency(coverUrls.concat(previewImgUrls), 10);
-      } catch (e) {
-      }
-    })();
-
-    gifPromise.then(function(src) {
+    var gifPromise = raceImage(loadingGifUrls).catch(function () { return null; });
+    gifPromise.then(function (src) {
       if (src) {
         loadingGif.src = src;
         loadingGif.style.display = 'block';
         if (potionWrapper) potionWrapper.style.display = 'none';
       }
     });
-    logoPromise.then(function(src) {
-      if (src) {
-        logoImg.src = src;
-        logoImg.style.display = 'block';
-        logoTower.style.display = 'none';
-      }
-    });
-    loaded2Promise.then(function(src) {
+
+    var loaded2Promise = raceImage(loaded2GifUrls).catch(function () { return null; });
+    loaded2Promise.then(function (src) {
       if (src) window.loaded2GifSrc = src;
     });
 
-    setTimeout(function() {
-      loadingOverlay.classList.add('hidden');
-      mainContent.style.opacity = '1';
+    var urlParams = new URLSearchParams(window.location.search);
+    var hasRid = !!urlParams.get('rid');
+
+    var preloadPromise = Promise.race([
+      priorityPreload(),
+      new Promise(function (resolve) { setTimeout(resolve, 6000); })
+    ]);
+
+    await preloadPromise;
+
+    loadingOverlay.classList.add('hidden');
+    mainContent.style.opacity = '1';
+
+    if (allSiteData['all']) {
+      modData = allSiteData['all'];
+      baseModData = modData;
+      renderPage(1);
+    } else {
       loadModData('all');
-    }, 10000);
+    }
 
-    logoArea.addEventListener('click', function(e) {
-      if (e.target === logoArea || e.target === logoImg || e.target.closest('.logo-img') || e.target.closest('.logo-tower')) {
-        openCharaDetail();
-      }
-    });
+    if (hasRid) {
+      handleUrlParams();
+    }
 
-    handleUrlParams();
+    initEditMode();
   }
-
-editFab.addEventListener('click', toggleEditMode);
-editExit.addEventListener('click', function() {
-  editMode = false; editCollapsed = false;
-  editFab.classList.remove('active');
-  editToolbar.style.display = 'none';
-  editToolbarMini.style.display = 'none';
-  document.body.classList.remove('edit-mode-active');
-  selectedCardIds.clear();
-  loadModData(activeCategory);
-  showToast('已退出编辑模式');
-});
-editAddMod.addEventListener('click', addNewMod);
-editSelectAll.addEventListener('click', function() {
-  modData.forEach(function(m) { selectedCardIds.add(m.id); });
-  updateExportSelectedBtn();
-  renderModCards(modData);
-  paginationEl.innerHTML = '';
-});
-editDeselectAll.addEventListener('click', function() {
-  selectedCardIds.clear();
-  updateExportSelectedBtn();
-  renderModCards(modData);
-  paginationEl.innerHTML = '';
-});
-editClearData.addEventListener('click', function() {
-  if (confirm('确定要清除当前分类的本地编辑数据吗？')) {
-    clearEditData(activeCategory);
-    dataCache = {};
-    allSiteData = {};
-    loadModData(activeCategory);
-    showToast('编辑数据已清除');
-  }
-});
-editImportJSON.addEventListener('click', function() {
-  importJSON();
-});
-editImportZip.addEventListener('click', function() {
-  importZip();
-});
-editFileList.addEventListener('click', function() {
-  toggleSidebar();
-});
-editSaveLocal.addEventListener('click', function() {
-  saveAllToLocal();
-});
-editLoadLocal.addEventListener('click', function() {
-  loadAllFromLocal();
-});
-editSidebarClose.addEventListener('click', function() {
-  toggleSidebar();
-});
-editSidebarExportZip.addEventListener('click', function() {
-  exportZip();
-});
-editExportAll.addEventListener('click', function() {
-  exportZip();
-});
-editExportSelected.addEventListener('click', function() {
-  if (!selectedCardIds.size) return;
-  var sel = modData.filter(function(m) { return selectedCardIds.has(m.id); });
-  var cn = activeCategory === 'all' ? 'sts2_mods' : 'O_o_interface';
-  exportJSON(sel, getExportFilename(cn + '_selected_' + sel.length));
-  showToast('已导出 ' + sel.length + ' 条选中数据');
-});
-editCollapse.addEventListener('click', function() {
-  editCollapsed = true;
-  editToolbar.style.display = 'none';
-  editToolbarMini.style.display = 'block';
-  document.body.classList.remove('edit-mode-active');
-});
-editToolbarMini.addEventListener('click', function() {
-  editCollapsed = false;
-  editToolbar.style.display = 'flex';
-  editToolbarMini.style.display = 'none';
-  document.body.classList.add('edit-mode-active');
-});
-editPopupCancel.addEventListener('click', function() {
-  editPopupOverlay.style.display = 'none';
-  if (editPopupResolve) editPopupResolve(null);
-  editPopupResolve = null;
-});
-editPopupConfirm.addEventListener('click', function() {
-  editPopupOverlay.style.display = 'none';
-  var v = editPopupInput.value.trim();
-  if (editPopupResolve) editPopupResolve(v || null);
-  editPopupResolve = null;
-});
-editPopupInput.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') editPopupConfirm.click();
-  else if (e.key === 'Escape') editPopupCancel.click();
-});
-editPopupOverlay.addEventListener('click', function(e) {
-  if (e.target === editPopupOverlay) {
-    editPopupOverlay.style.display = 'none';
-    if (editPopupResolve) editPopupResolve(null);
-    editPopupResolve = null;
-  }
-});
-document.addEventListener('keydown', function(e) {
-  if (e.ctrlKey && e.shiftKey && e.key === 'E') { e.preventDefault(); toggleEditMode(); }
-});
-
-
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPage);
   } else {
     initPage();
   }
+
+  // ============================================
+  // ===== 编辑模式系统（编辑器特有功能） =====
+  // ============================================
+  var isEditMode = false;
+  var editFab, editToolbar;
+  var EDIT_KEY = 'sts2_editor_data';
+  var editData = { sts2_mods: {}, 'O.o_interface': {} };
+  var selectedMods = new Set();
+
+  function initEditMode() {
+    editFab = document.createElement('button');
+    editFab.className = 'edit-fab';
+    editFab.innerHTML = '✎';
+    editFab.title = '编辑模式 (Ctrl+Shift+E)';
+    document.body.appendChild(editFab);
+
+    editFab.addEventListener('click', toggleEditMode);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        toggleEditMode();
+      }
+    });
+
+    loadEditData();
+  }
+
+  function toggleEditMode() {
+    isEditMode = !isEditMode;
+    editFab.classList.toggle('active', isEditMode);
+    document.body.classList.toggle('edit-mode-active', isEditMode);
+
+    if (isEditMode) {
+      showEditToolbar();
+      renderPage(currentPage);
+      showToast('编辑模式已开启');
+    } else {
+      hideEditToolbar();
+      selectedMods.clear();
+      renderPage(currentPage);
+      showToast('已退出编辑模式');
+    }
+  }
+
+  function showEditToolbar() {
+    if (editToolbar) editToolbar.remove();
+
+    editToolbar = document.createElement('div');
+    editToolbar.className = 'edit-toolbar';
+    editToolbar.innerHTML =
+      '<span class="edit-toolbar-label">编辑模式</span>' +
+      '<div class="edit-toolbar-actions">' +
+      '<button class="et-btn et-btn--add" id="etAdd">+ 新增MOD</button>' +
+      '<button class="et-btn" id="etImport">导入JSON/ZIP</button>' +
+      '<button class="et-btn" id="etExport">导出选中</button>' +
+      '<button class="et-btn" id="etExportAll">导出全部</button>' +
+      '<span class="et-sep"></span>' +
+      '<button class="et-btn et-btn--warn" id="etDelete">删除选中</button>' +
+      '<button class="et-btn et-btn--collapse" id="etCollapse">全部折叠</button>' +
+      '<span class="et-sep"></span>' +
+      '<button class="et-btn et-btn--exit" id="etExit">退出编辑</button>' +
+      '</div>';
+
+    document.body.appendChild(editToolbar);
+
+    document.getElementById('etAdd').addEventListener('click', addNewMod);
+    document.getElementById('etImport').addEventListener('click', importData);
+    document.getElementById('etExport').addEventListener('click', exportSelected);
+    document.getElementById('etExportAll').addEventListener('click', exportAll);
+    document.getElementById('etDelete').addEventListener('click', deleteSelected);
+    document.getElementById('etCollapse').addEventListener('click', collapseAllSections);
+    document.getElementById('etExit').addEventListener('click', toggleEditMode);
+  }
+
+  function hideEditToolbar() {
+    if (editToolbar) {
+      editToolbar.remove();
+      editToolbar = null;
+    }
+  }
+
+  function attachEditControlsToCards() {
+    document.querySelectorAll('.cd').forEach(function (card) {
+      card.classList.add('edit-mode');
+      var modId = card.dataset.modId;
+      if (!modId) return;
+
+      if (!card.querySelector('.mod-card-edit-check')) {
+        var check = document.createElement('input');
+        check.type = 'checkbox';
+        check.className = 'mod-card-edit-check';
+        check.checked = selectedMods.has(modId);
+        check.addEventListener('change', function () {
+          if (this.checked) selectedMods.add(modId);
+          else selectedMods.delete(modId);
+        });
+        card.querySelector('.cv').appendChild(check);
+      }
+
+      if (!card.querySelector('.mod-card-edit-delete')) {
+        var delBtn = document.createElement('button');
+        delBtn.className = 'mod-card-edit-delete';
+        delBtn.innerHTML = '×';
+        delBtn.title = '删除';
+        delBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (confirm('确定要删除这个MOD吗？')) {
+            deleteMod(modId);
+          }
+        });
+        card.querySelector('.cv').appendChild(delBtn);
+      }
+
+      if (!card.querySelector('.mod-card-edit-cover-btn')) {
+        var coverBtn = document.createElement('button');
+        coverBtn.className = 'mod-card-edit-cover-btn';
+        coverBtn.textContent = '换封面';
+        coverBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          changeCover(modId);
+        });
+        card.querySelector('.cv').appendChild(coverBtn);
+      }
+
+      if (!card.querySelector('.mod-card-edit-badge-btn')) {
+        var badgeBtn = document.createElement('button');
+        badgeBtn.className = 'mod-card-edit-badge-btn';
+        badgeBtn.textContent = '改版本';
+        badgeBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          changeBadge(modId);
+        });
+        card.querySelector('.cv').appendChild(badgeBtn);
+      }
+    });
+
+    document.querySelectorAll('.mod-tag-add-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var modId = this.dataset.modId;
+        addTag(modId);
+      });
+    });
+
+    document.querySelectorAll('.tag-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var tag = this.dataset.tag;
+        var modId = this.closest('.cd').dataset.modId;
+        removeTag(modId, tag);
+      });
+    });
+  }
+
+  function makeModalEditable(mod) {
+    var titleEl = mC.querySelector('.mit');
+    if (titleEl) {
+      titleEl.contentEditable = true;
+      titleEl.classList.add('editable-field');
+      titleEl.addEventListener('blur', function () {
+        mod.title = this.textContent.trim();
+        saveEditData();
+        renderPage(currentPage);
+      });
+    }
+
+    var descEl = document.getElementById('dT');
+    if (descEl) {
+      descEl.contentEditable = true;
+      descEl.classList.add('editable-field');
+      descEl.addEventListener('blur', function () {
+        mod.description = this.innerHTML.replace(/<br>/g, '\n').replace(/<[^>]+>/g, '').trim();
+        saveEditData();
+      });
+    }
+  }
+
+  function addNewMod() {
+    var newMod = {
+      id: 'RID' + Date.now(),
+      title: '新MOD',
+      badge: 'v1.0.0',
+      size: '未知',
+      date: new Date().toISOString().split('T')[0],
+      tags: [],
+      description: '',
+      author: '',
+      authorLinks: [],
+      downloadLinks: [],
+      previewImages: [],
+      previewVideos: [],
+      coverImage: '',
+      coverGradient: 'linear-gradient(135deg,#f5f2f8,#ece7f3)'
+    };
+
+    modData.unshift(newMod);
+    baseModData = modData;
+    allSiteData[activeCategory] = modData;
+    saveEditData();
+    renderPage(1);
+    showToast('已添加新MOD');
+  }
+
+  function deleteMod(modId) {
+    modData = modData.filter(function (m) { return m.id !== modId; });
+    baseModData = modData;
+    allSiteData[activeCategory] = modData;
+    selectedMods.delete(modId);
+    saveEditData();
+    renderPage(currentPage);
+    showToast('已删除');
+  }
+
+  function deleteSelected() {
+    if (selectedMods.size === 0) {
+      showToast('请先选择要删除的MOD');
+      return;
+    }
+    if (!confirm('确定要删除选中的 ' + selectedMods.size + ' 个MOD吗？')) return;
+
+    modData = modData.filter(function (m) { return !selectedMods.has(m.id); });
+    baseModData = modData;
+    allSiteData[activeCategory] = modData;
+    selectedMods.clear();
+    saveEditData();
+    renderPage(currentPage);
+    showToast('已删除选中MOD');
+  }
+
+  function changeCover(modId) {
+    var url = prompt('请输入封面图片URL：');
+    if (!url) return;
+    var mod = modData.find(function (m) { return m.id === modId; });
+    if (mod) {
+      mod.coverImage = url;
+      saveEditData();
+      renderPage(currentPage);
+      showToast('封面已更新');
+    }
+  }
+
+  function changeBadge(modId) {
+    var mod = modData.find(function (m) { return m.id === modId; });
+    if (!mod) return;
+    var badge = prompt('请输入版本号：', mod.badge);
+    if (badge !== null) {
+      mod.badge = badge.trim();
+      saveEditData();
+      renderPage(currentPage);
+      showToast('版本已更新');
+    }
+  }
+
+  function addTag(modId) {
+    var tag = prompt('请输入标签名称：');
+    if (!tag) return;
+    var mod = modData.find(function (m) { return m.id === modId; });
+    if (mod) {
+      if (!mod.tags) mod.tags = [];
+      if (!mod.tags.includes(tag)) {
+        mod.tags.push(tag);
+        saveEditData();
+        renderPage(currentPage);
+        showToast('标签已添加');
+      }
+    }
+  }
+
+  function removeTag(modId, tag) {
+    var mod = modData.find(function (m) { return m.id === modId; });
+    if (mod && mod.tags) {
+      mod.tags = mod.tags.filter(function (t) { return t !== tag; });
+      saveEditData();
+      renderPage(currentPage);
+      showToast('标签已删除');
+    }
+  }
+
+  function collapseAllSections() {
+    document.querySelectorAll('.sb').forEach(function (sb) {
+      sb.classList.add('co');
+      var arrow = sb.previousElementSibling;
+      if (arrow) {
+        var sa2 = arrow.querySelector('.sa2');
+        if (sa2) sa2.classList.remove('op');
+      }
+    });
+  }
+
+  // ===== 导入/导出 =====
+  function importData() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,.zip';
+    input.addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function (event) {
+        try {
+          var imported = JSON.parse(event.target.result);
+          if (Array.isArray(imported)) {
+            mergeData(imported);
+          } else if (imported.sts2_mods || imported['O.o_interface']) {
+            if (imported.sts2_mods) mergeData(imported.sts2_mods);
+            if (imported['O.o_interface']) mergeData(imported['O.o_interface']);
+          } else {
+            showToast('无法识别的数据格式');
+          }
+        } catch (err) {
+          showToast('导入失败：' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+    input.click();
+  }
+
+  function mergeData(newData) {
+    if (!Array.isArray(newData)) {
+      showToast('数据格式错误');
+      return;
+    }
+
+    var existingIds = new Set(modData.map(function (m) { return m.id; }));
+    var added = 0;
+    newData.forEach(function (item) {
+      if (item.id && !existingIds.has(item.id)) {
+        modData.push(item);
+        added++;
+      }
+    });
+
+    modData = sortModsByTimeId(modData);
+    baseModData = modData;
+    allSiteData[activeCategory] = modData;
+    saveEditData();
+    renderPage(1);
+
+    triggerPostImportPreload();
+    showToast('已导入 ' + added + ' 个MOD');
+  }
+
+  function triggerPostImportPreload() {
+    setTimeout(function () {
+      var page1Data = getPageSlice(modData, 1);
+      var page2Data = getPageSlice(modData, 2);
+      var covers = extractCoverUrls(page1Data).concat(extractCoverUrls(page2Data));
+      preloadImagesWithConcurrency(covers, 6);
+    }, 100);
+  }
+
+  function exportSelected() {
+    if (selectedMods.size === 0) {
+      showToast('请先选择要导出的MOD');
+      return;
+    }
+    var selected = modData.filter(function (m) { return selectedMods.has(m.id); });
+    downloadJson(selected, 'selected_mods.json');
+  }
+
+  function exportAll() {
+    downloadJson(modData, 'all_mods.json');
+  }
+
+  function downloadJson(data, filename) {
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('已导出：' + filename);
+  }
+
+  // ===== localStorage 持久化 =====
+  function saveEditData() {
+    var key = activeCategory === 'all' ? 'sts2_mods' : 'O.o_interface';
+    editData[key] = modData;
+    localStorage.setItem(EDIT_KEY, JSON.stringify(editData));
+  }
+
+  function loadEditData() {
+    try {
+      var saved = localStorage.getItem(EDIT_KEY);
+      if (saved) {
+        editData = JSON.parse(saved);
+      }
+    } catch (e) {
+      editData = { sts2_mods: {}, 'O.o_interface': {} };
+    }
+  }
+
+  // ===== 全局编辑模式暴露 =====
+  window._isEditMode = function () { return isEditMode; };
+  window._toggleEditMode = toggleEditMode;
 })();
