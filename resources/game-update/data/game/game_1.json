@@ -1,0 +1,31 @@
+
+[
+  {
+    "version": "v0.103.2",
+    "date": "2026-06-05",
+    "size": "829.44MB",
+    "description": "首个大更新！重做进阶6（删卡变贵），数值锁上限并移除纪元遗物以强力限制无限流，Boss重做，新增徽章与恐惧症模式。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6b56a9c2329149028afac59056d22849?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.103.3",
+    "date": "2026-06-05",
+    "size": "829.44MB",
+    "description": "纯修Bug补丁（v0.103.2的修复版）。重点修复游戏崩溃、手柄交互、多人联机及遗物软锁问题，无新机制，纯粹提升稳定性。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6ff2c90c0b7248249d818620ae68b451?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.106.1",
+    "date": "2026-06-05",
+    "size": "862.12MB",
+    "description": "新Boss修复。专为v0.106.0新增Boss永劫沙漏修Bug，修复其Wither卡牌在金字塔下异常保留、误强化及意图显示错误。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgza86aaebac7d941cf8067bb86a0fd48be?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.107.0",
+    "date": "2026-06-05",
+    "size": "865.39MB",
+    "description": "这个版本我还没玩过，啥时候更新的？所以...猫猫暂时还没有想好介绍哦...",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz43be7b3709f540b5be6ba344a6212b33?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  }
+]
