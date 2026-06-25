@@ -1146,10 +1146,13 @@
     function initVideoPlayers() {
         document.querySelectorAll('.pvi-wrap').forEach(function(wrap) {
             var video = wrap.querySelector('video');
-            var canvas = wrap.querySelector('canvas');
+            var canvas = wrap.querySelector('.pvi-poster');
             var overlay = wrap.querySelector('.pvi-overlay');
             var playBtn = wrap.querySelector('.pvi-play-btn');
             if (!video || !overlay || !playBtn) return;
+            var loadFailed = false;
+            var retryCount = 0;
+            var maxRetries = 2;
             function generatePoster() {
                 if (!canvas || !video.videoWidth) return;
                 var ctx = canvas.getContext('2d');
@@ -1158,25 +1161,67 @@
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 canvas.style.display = 'block';
             }
+            function showLoadError() {
+                if (loadFailed) return;
+                loadFailed = true;
+                overlay.querySelector('.pvi-play-btn').style.display = 'none';
+                var errMsg = document.createElement('div');
+                errMsg.className = 'pvi-error';
+                errMsg.textContent = '视频加载失败，请点击播放按钮尝试';
+                overlay.appendChild(errMsg);
+            }
             video.addEventListener('loadedmetadata', function() {
+                if (loadFailed) return;
                 video.currentTime = 0.1;
             });
             video.addEventListener('seeked', function() {
+                if (loadFailed) return;
                 generatePoster();
             });
             video.addEventListener('loadeddata', function() {
+                if (loadFailed) return;
                 if (!canvas || canvas.style.display === 'block') return;
                 generatePoster();
             });
+            video.addEventListener('error', function(e) {
+                if (loadFailed) return;
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    setTimeout(function() { video.load(); }, 500);
+                } else {
+                    showLoadError();
+                }
+            });
+            video.addEventListener('stalled', function() {
+                if (loadFailed) return;
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    setTimeout(function() { video.load(); }, 500);
+                } else {
+                    showLoadError();
+                }
+            });
+            setTimeout(function() {
+                if (!loadFailed && canvas && canvas.style.display !== 'block' && video.readyState < 2) {
+                    showLoadError();
+                }
+            }, 8000);
             video.load();
             playBtn.addEventListener('click', function() {
+                if (loadFailed) {
+                    window.open(video.src, '_blank');
+                    return;
+                }
                 var vp = document.createElement('div');
                 vp.className = 'video-player-overlay';
                 vp.innerHTML = '<div class="vpo-close"></div><video class="vpo-video" src="' + video.src + '" controls playsinline webkit-playsinline></video>';
                 document.body.appendChild(vp);
                 document.body.style.overflow = 'hidden';
                 var vpoVideo = vp.querySelector('.vpo-video');
-                vpoVideo.play();
+                vpoVideo.play().catch(function() {
+                    window.open(video.src, '_blank');
+                    vp.remove();
+                });
                 vp.querySelector('.vpo-close').addEventListener('click', function() {
                     vp.remove();
                     document.body.style.overflow = '';

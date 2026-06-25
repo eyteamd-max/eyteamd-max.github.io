@@ -1481,6 +1481,16 @@ body {
     border-color: transparent transparent transparent #e89b9b;
 }
 
+.pvi-error {
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+    padding: 10px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 6px;
+    max-width: 80%;
+}
+
 .video-player-overlay {
     position: fixed;
     inset: 0;
