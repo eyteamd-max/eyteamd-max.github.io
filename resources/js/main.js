@@ -965,7 +965,7 @@
         if (!vids || !vids.length) return '<div class="pe">暂无视频预览资源</div>';
         var h = '<div class="pvl">';
         for (var i = 0; i < vids.length; i++) {
-            h += '<div class="pvi-wrap" data-video-src="' + vids[i] + '"><video class="pvi" playsinline webkit-playsinline preload="metadata" src="' + vids[i] + '"></video><canvas class="pvi-poster" data-video-src="' + vids[i] + '"></canvas><div class="pvi-overlay"><div class="pvi-play-btn"></div></div></div>';
+            h += '<div class="pvi-wrap" data-video-src="' + vids[i] + '"><video class="pvi" playsinline webkit-playsinline preload="metadata" referrerpolicy="no-referrer" src="' + vids[i] + '"></video><canvas class="pvi-poster" data-video-src="' + vids[i] + '"></canvas><div class="pvi-overlay"><div class="pvi-play-btn"></div></div></div>';
         }
         return h + '</div>';
     }
@@ -1214,7 +1214,7 @@
                 }
                 var vp = document.createElement('div');
                 vp.className = 'video-player-overlay';
-                vp.innerHTML = '<div class="vpo-close"></div><video class="vpo-video" src="' + video.src + '" controls playsinline webkit-playsinline></video>';
+                vp.innerHTML = '<div class="vpo-close"></div><video class="vpo-video" src="' + video.src + '" controls playsinline webkit-playsinline referrerpolicy="no-referrer"></video>';
                 document.body.appendChild(vp);
                 document.body.style.overflow = 'hidden';
                 var vpoVideo = vp.querySelector('.vpo-video');
