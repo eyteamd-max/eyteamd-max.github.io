@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>杀戮尖塔2娘化MOD站</title>
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="img-src * data:;">
+  <style>
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #faf7f4; z-index: 9999;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .loading-gif {
+      display: none;
+    }
+    .loading-spinner-main {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e2dbd0;
+      border-top-color: #e89b9b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    .loading-text {
+      display: block;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 1.1rem; color: #6b6378;
+      animation: loadingPulse 1.5s ease-in-out infinite;
+      margin-top: 10px;
+    }
+    .loading-spinner {
+      display: inline-block; width: 1em; height: 1em;
+      border: 2px solid #6b6378; border-top-color: transparent;
+      border-radius: 50%; margin-left: 8px;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes loadingPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .main-container {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+  </style>
+  <link rel="stylesheet" href="resources/css/style.css?v=20260625f">
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner-main" id="potionWrapper"></div>
+    <img id="loadingGif" class="loading-gif" alt="加载中" style="display:none;">
+    <p class="loading-text" id="loadingText">正在加载...马上就好 <span class="loading-spinner"></span></p>
+  </div>
+
+  <div class="main-container" id="mainContent">
+    <div class="mc">
+      <header class="hdr">
+        <div class="la" id="logoArea">
+          <img alt="头像" class="logo-img" id="logoImg" src="http://shp.qpic.cn/collector/1976464052/c80621a1-b89c-451e-9741-5ff7659269c4/0" onerror="this.style.display='none';">
+          <div class="logo-text-wrap">
+            <span class="ln">STS2娘化MOD站</span>
+            <span class="ln-sub">如有侵权，请联系我们进行删除</span>
+          </div>
+        </div>
+        <div class="sw">
+          <div class="search-container" id="searchContainer">
+            <input type="text" class="si" id="sI" placeholder="搜索MOD名、标签（如 NSFW）... 支持RID搜索" autocomplete="off">
+            <span class="search-mascot"></span>
+            <ul class="search-dropdown" id="searchDropdown"></ul>
+          </div>
+        </div>
+        <button class="menu-btn" id="menuBtn" aria-label="菜单">☰</button>
+        <div class="menu-panel" id="menuPanel">
+          <a class="menu-item" href="https://space.bilibili.com/1641771937" target="_blank" rel="noopener noreferrer" title="B站主页">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 0 1-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 0 1 .16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z"/></svg>
+          </a>
+          <a class="menu-item" href="mailto:eyofficial@hotmail.com" title="发邮件">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </a>
+          <button class="menu-item" id="themeToggle" title="切换主题">
+            <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg id="themeIconMoon" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="quick-actions">
+        <a href="resources/STS2-Front/index.html" class="quick-card"><span class="quick-card-title">模组前置</span><span class="quick-card-desc">BaseLib RitsuLib<br>历史与最新版本大全</span></a>
+        <a href="resources/game-update/index.html" class="quick-card"><span class="quick-card-title">塔Ⅱ手机版</span><span class="quick-card-desc">实时追踪最新版<br>@wsdx233</span></a>
+        <a href="https://qm.qq.com/q/n6K1vxQyPe" class="quick-card"><span class="quick-card-title">问题反馈</span><span class="quick-card-desc">资源失效？联系管理员</span></a>
+        <a href="https://qun.qq.com/universal-share/share?ac=1&authKey=umW5Hlm%2FbwwiDZgISux8giT8C4yyjnREJFdPZE4rOkX%2FctyAq3FRfOlD4122mWcz&busi_data=eyJncm91cENvZGUiOiIxMDc3MzEyMDEzIiwidG9rZW4iOiJ2RkxrWUszSFNYZ0d4Z2krMVdmd3RWSDZoSU1zbHpPQkcwY0lWY2p6aDhTMnk1N0RjcjZRSDA4TDQvbVVIeWxhIiwidWluIjoiMjcxNjUwMjQ1MiJ9&data=9XLsSLFW4iLqXuyTm_erd0KUhFsutE-AHFWc1JArCrGW_rQqvrSpc1cV3v71IuNN07rB9relz0VRfLwqHTQsdA&svctype=4&tempid=h5_group_info" class="quick-card"><span class="quick-card-title">玩家交流</span><span class="quick-card-desc">加入玩家群，MOD交流</span></a>
+      </section>
+
+      <div class="category-tabs" id="categoryTabs">
+        <span class="category-tab active" data-category="all">模组合集</span>
+        <span class="category-tab" data-category="skin">网盘资源</span>
+      </div>
+
+      <div class="mg" id="mG"></div>
+      <div class="pagination" id="pagination"></div>
+
+      <footer class="ft"><p>STS2娘化MOD站 &copy; 2026 壹个屑猫猫</p></footer>
+    </div>
+  </div>
+
+  <div class="mo" id="mO">
+    <button class="mx" id="mX">&times;</button>
+    <div class="moc" id="mC"></div>
+  </div>
+
+  <div class="lo" id="lO">
+    <button class="lx" id="lX">&times;</button>
+    <img class="li" id="lI" alt="查看大图">
+  </div>
+
+  <div class="to" id="tT"></div>
+
+  <script src="resources/js/main.js?v=20260625f" defer></script>
+</body>
+</html>
