@@ -1,1 +1,0 @@
-import{d as o,q as a,o as e,c as s,G as n,F as c,V as _,W as p}from"./LPW56aBP.js";import{u as r}from"./Dzhsznyb.js";import"./C1l3m8vg.js";import"./DHIOzD2q.js";const m={class:"nuxt-app"},k=o({__name:"mobile-view",setup(i){return r(),(u,l)=>{const t=_;return e(),a("div",m,[(e(),s(p,null,{default:n(()=>[c(t)]),_:1}))])}}});export{k as default};
