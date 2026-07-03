@@ -1,0 +1,922 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Releases 解析 - 建议多测几次速</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.85); } }
+@keyframes cardReveal { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes tickPulse { 0% { opacity: .6; } 50% { opacity: 1; } 100% { opacity: .6; } }
+@keyframes dotWave { 0%, 60%, 100% { opacity: .2; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
+.anim-fade-up { animation: fadeInUp .5s cubic-bezier(.16,1,.3,1) both; }
+.anim-fade { animation: fadeIn .4s ease both; }
+.anim-card { animation: cardReveal .6s cubic-bezier(.16,1,.3,1) both; }
+.shimmer-bar { background: linear-gradient(90deg, #c7d2fe 25%, #a5b4fc 50%, #c7d2fe 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+.pulse-dot { animation: pulseDot 1.2s ease-in-out infinite; }
+.tick-pulse { animation: tickPulse 1s ease-in-out infinite; }
+.typing-dots { display: inline-flex; gap: 1px; margin-left: 2px; vertical-align: 1px; }
+.typing-dots span { font-size: 13px; font-weight: 700; color: #94a3b8; opacity: .2; animation: dotWave 1.2s ease-in-out infinite; }
+.typing-dots span:nth-child(1) { animation-delay: 0s; }
+.typing-dots span:nth-child(2) { animation-delay: .15s; }
+.typing-dots span:nth-child(3) { animation-delay: .3s; }
+.btn-primary { transition: all .2s cubic-bezier(.16,1,.3,1); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,70,229,.25); }
+.btn-primary:active { transform: translateY(0); }
+.btn-outline { transition: all .15s ease; }
+.btn-outline:hover { background: #f8fafc; }
+.btn-ghost { transition: all .15s ease; }
+.btn-ghost:hover { background: #f1f5f9; }
+.meta-card { transition: background .15s ease; }
+.meta-card:hover { background: #f8fafc; }
+.route-row { transition: all .15s ease; }
+.route-row:hover { border-color: #cbd5e1; background: #fafbfc; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+.live-row { will-change: transform; }
+.footer-text {
+  display: block;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  transition: color .15s ease;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.footer-text:hover { color: #64748b; }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900 antialiased">
+<div class="max-w-2xl mx-auto px-4 pt-8 pb-14">
+
+<div id="top-status" class="mb-5 anim-fade-up min-h-[20px]">
+<p class="text-xs leading-relaxed">
+<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+</p>
+</div>
+
+<div class="mb-5 anim-fade-up" style="animation-delay:.06s">
+<div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm px-5 py-4">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+<svg class="w-4.5 h-4.5 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+</svg>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-2">
+<h1 id="header-filename" class="text-sm font-semibold text-slate-800 truncate">等待解析...</h1>
+<span id="header-size" class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-xs font-medium whitespace-nowrap">-</span>
+</div>
+<p id="header-repo" class="text-xs text-slate-400 mt-0.5 truncate">请提供有效的 GitHub 仓库链接</p>
+</div>
+<a id="header-repo-link" href="#" target="_blank" rel="noopener" class="btn-ghost ml-auto shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-slate-400 text-xs font-medium whitespace-nowrap border border-transparent hover:border-slate-200 hover:text-slate-600 hidden">
+<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+仓库
+</a>
+</div>
+</div>
+</div>
+
+<div id="testing-status" class="mb-6 anim-fade-up hidden" style="animation-delay:.12s">
+<div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+<div class="flex items-center justify-between mb-3.5">
+<div class="flex items-center gap-2.5">
+<span id="status-dot" class="w-2 h-2 rounded-full bg-indigo-500 pulse-dot"></span>
+<span id="status-text" class="text-sm font-medium text-slate-600">正在初始化测速环境...</span>
+</div>
+<div id="elapsed-area" class="flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-400 tick-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+<span id="elapsed-time" class="text-xs font-mono text-slate-400">0.0s</span>
+</div>
+</div>
+<div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+<div id="progress-bar" class="h-full rounded-full shimmer-bar transition-all duration-500 ease-out" style="width:0%"></div>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span id="progress-label" class="text-xs text-slate-400">准备中</span>
+<span id="progress-count" class="text-xs text-slate-400 font-mono">0 / 0</span>
+</div>
+</div>
+</div>
+
+<div id="live-list" class="mb-6 space-y-1.5 hidden"></div>
+
+<div id="best-card" class="hidden mb-5"></div>
+
+<div id="backup-section" class="hidden mb-6"></div>
+
+<div id="error-card" class="hidden mb-6">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+<div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
+<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+</div>
+<p id="error-title" class="text-sm font-medium text-slate-700 mb-1">参数错误</p>
+<p id="error-desc" class="text-xs text-slate-400 mb-4">请提供有效的 GitHub 仓库链接作为 url 参数</p>
+<div class="text-xs text-slate-500 bg-slate-50 rounded-lg p-3 text-left font-mono break-all">
+示例: https://axxxx.cyou/resources/github_parsing/?url=https://github.com/owner/repo
+</div>
+</div>
+</div>
+
+<div id="no-routes" class="hidden mb-6">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+<div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
+<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+</div>
+<p class="text-sm font-medium text-slate-700 mb-1">暂无可用线路</p>
+<p class="text-xs text-slate-400 mb-4">所有代理通道均无法连接，请稍后重试</p>
+<a id="direct-release-link" href="#" target="_blank" rel="noopener" class="btn-outline inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium whitespace-nowrap">
+直达 GitHub Release
+</a>
+</div>
+</div>
+
+<div id="retest-area" class="hidden text-center mb-8">
+<button onclick="runAllTests()" class="btn-ghost inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-slate-500 text-sm font-medium whitespace-nowrap border border-transparent hover:border-slate-200">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+重新测速
+</button>
+</div>
+
+<footer class="text-center anim-fade" style="animation-delay:.2s">
+<a href="../../index.html" class="footer-text text-slate-400">GitHub Releases 解析器 / STS2娘化MOD站 © 2026 壹个屑猫猫</a>
+</footer>
+</div>
+
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-xl bg-slate-800 text-white text-sm font-medium shadow-xl hidden z-50 whitespace-nowrap"></div>
+
+<script>
+var GITHUB_PROXIES = [
+  {name:'dl.axxxx.cyou',url:'https://dl.axxxx.cyou/',desc:'自建节点'},
+  {name:'tvv.tw',url:'https://tvv.tw/',desc:'高速备用'}
+];
+
+var FALLBACK_PROXY = 'http://dl.axxxx.cyou/';
+var GITHUB_RELEASE_URL = '';
+var GITHUB_REPO_URL = '';
+var RELEASE = {
+  version: '-',
+  publishedAt: '-',
+  author: '-',
+  fileName: '-',
+  fileSize: '-',
+  downloadCount: '-',
+  htmlUrl: '-'
+};
+var proxyResults = [];
+var isTesting = false;
+var LATENCY_TIMEOUT = 3000;
+var SPEED_TIMEOUT = 3000;
+var PING_COUNT = 2;
+var PING_INTERVAL = 100;
+var LATENCY_CUTOFF = 3000;
+var ANOMALY_RATIO = 3;
+var ANOMALY_PENALTY = 0.6;
+var RETRY_DELAY = 500;
+var AUTO_DOWNLOAD = true;
+
+function getQueryParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+function parseGitHubRepoUrl(url) {
+  if (!url) return null;
+  var match = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/?/);
+  if (match && match[1] && match[2]) {
+    return { owner: match[1], repo: match[2], fullName: match[1] + '/' + match[2] };
+  }
+  return null;
+}
+
+function autoFitFooter() {
+  var footer = document.querySelector('.footer-text');
+  if (!footer) return;
+  var cw = footer.clientWidth;
+  if (cw < 50) return;
+  var m = document.createElement('span');
+  m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-size:12px;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;';
+  m.textContent = footer.textContent;
+  document.body.appendChild(m);
+  var tw = m.offsetWidth;
+  document.body.removeChild(m);
+  if (tw <= 0) return;
+  var fs = 12 * cw * 0.96 / tw;
+  fs = Math.max(9, Math.min(14, fs));
+  footer.style.fontSize = fs.toFixed(1) + 'px';
+}
+
+var _segs = [], _vis = 0, _timer = null, _phase = 'latency', _targetFs = '';
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function totalLen() {
+  var n = 0;
+  for (var i = 0; i < _segs.length; i++) {
+    if (i > 0) n += 3;
+    n += _segs[i].text.length;
+  }
+  return n;
+}
+
+function calcTopFs() {
+  if (_segs.length < 2) { _targetFs = ''; return; }
+  var el = document.getElementById('top-status');
+  if (!el) return;
+  var cw = el.clientWidth;
+  if (cw < 50) return;
+  var fullText = '';
+  for (var i = 0; i < _segs.length; i++) {
+    if (i > 0) fullText += ' / ';
+    fullText += _segs[i].text;
+  }
+  if (!fullText) return;
+  var m = document.createElement('span');
+  m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-size:14px;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;';
+  m.textContent = fullText;
+  el.appendChild(m);
+  var tw = m.offsetWidth;
+  el.removeChild(m);
+  if (tw <= 0) return;
+  var fs = 14 * cw * 1.8 / tw;
+  fs = Math.min(17, Math.max(11, fs));
+  var tester = document.createElement('p');
+  tester.style.cssText = 'position:absolute;visibility:hidden;width:' + cw + 'px;margin:0;padding:0;font-size:' + fs + 'px;line-height:1.625;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;';
+  tester.textContent = fullText;
+  el.appendChild(tester);
+  var twoLineH = fs * 1.625 * 2;
+  for (var iter = 0; iter < 5; iter++) {
+    if (tester.offsetHeight <= twoLineH + 1) break;
+    fs = fs * 0.9;
+    tester.style.fontSize = fs + 'px';
+    twoLineH = fs * 1.625 * 2;
+  }
+  el.removeChild(tester);
+  _targetFs = fs.toFixed(1) + 'px';
+}
+
+function initTopStatus() {
+  _segs = [{text:'正在从Github开源库查找最新版本...',cls:'text-slate-400'}];
+  _vis = 0;
+  _phase = 'latency';
+  _targetFs = '';
+  clearTimeout(_timer);
+  renderTop();
+}
+
+function ensureSeg(idx) {
+  var n = 0;
+  for (var i = 0; i <= idx && i < _segs.length; i++) {
+    if (i > 0) n += 3;
+    n += _segs[i].text.length;
+  }
+  clearTimeout(_timer);
+  if (_vis < n) { _vis = n; renderTop(); }
+}
+
+function smoothTo(target) {
+  clearTimeout(_timer);
+  if (_vis >= target) return;
+  (function step() {
+    if (_vis < target) {
+      _vis++;
+      renderTop();
+      var rem = target - _vis;
+      _timer = setTimeout(step, rem > 25 ? 8 : rem > 12 ? 28 : rem > 5 ? 48 : 65);
+    }
+  })();
+}
+
+function syncTyping(pct) {
+  if (_phase === 'latency' && _segs.length > 0) {
+    var len = _segs[0].text.length;
+    smoothTo(Math.max(0, Math.min(Math.round(len * pct / 100), len)));
+  } else if (_phase === 'speed' && _segs.length > 1) {
+    var s1 = _segs[0].text.length;
+    var s2 = _segs[1].text.length;
+    var s2t = Math.max(0, Math.min(Math.round(s2 * pct / 100), s2));
+    smoothTo(s1 + 3 + s2t);
+  }
+}
+
+function fastTypeToEnd() {
+  return new Promise(function(resolve) {
+    clearTimeout(_timer);
+    var target = totalLen();
+    (function step() {
+      if (_vis < target) {
+        _vis++;
+        renderTop();
+        _timer = setTimeout(step, 36);
+      } else {
+        renderTop();
+        resolve();
+      }
+    })();
+  });
+}
+
+function addSegAndType(text, cls) {
+  _segs.push({text: text, cls: cls || 'text-slate-400'});
+  return fastTypeToEnd();
+}
+
+function addSeg(text, cls) {
+  _segs.push({text: text, cls: cls || 'text-slate-400'});
+}
+
+function renderTop() {
+  var c = document.getElementById('top-status');
+  var total = totalLen();
+  var typing = _vis < total;
+  var html = '<p class="leading-relaxed text-xs"';
+  if (_targetFs) html += ' style="font-size:' + _targetFs + '"';
+  html += '>';
+  var ci = 0;
+  for (var i = 0; i < _segs.length; i++) {
+    var sep = i > 0 ? ' / ' : '';
+    var segText = sep + _segs[i].text;
+    if (_vis <= ci) break;
+    var vc = Math.min(segText.length, _vis - ci);
+    if (i > 0 && vc > 0) {
+      var sepLen = Math.min(3, vc);
+      html += '<span class="text-slate-300 mx-0.5">' + esc(sep.substring(0, sepLen)) + '</span>';
+      if (vc > 3) {
+        html += '<span class="' + _segs[i].cls + '">' + esc(segText.substring(3, vc)) + '</span>';
+      }
+    } else {
+      html += '<span class="' + _segs[i].cls + '">' + esc(segText.substring(0, vc)) + '</span>';
+    }
+    ci += segText.length;
+  }
+  if (typing) {
+    html += '<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
+  }
+  html += '</p>';
+  c.innerHTML = html;
+}
+
+var _t0 = 0, _tid = null;
+
+function startTimer() {
+  _t0 = performance.now();
+  var e = document.getElementById('elapsed-time');
+  e.textContent = '0.0s';
+  clearInterval(_tid);
+  _tid = setInterval(function() { e.textContent = ((performance.now() - _t0) / 1000).toFixed(1) + 's'; }, 100);
+}
+
+function stopTimer() {
+  clearInterval(_tid);
+  var s = ((performance.now() - _t0) / 1000).toFixed(1);
+  document.getElementById('elapsed-time').textContent = s + 's';
+  return s;
+}
+
+var releaseFetched = false;
+var currentRepoInfo = null;
+
+async function fetchRelease() {
+  if (!currentRepoInfo) return;
+  try {
+    var apiUrl = 'https://api.github.com/repos/' + currentRepoInfo.fullName + '/releases/latest';
+    var r = await fetch(apiUrl, {headers: {'Accept': 'application/vnd.github.v3+json'}});
+    if (!r.ok) throw new Error('GitHub API 请求失败: ' + r.status);
+    var d = await r.json();
+    if (d.tag_name) RELEASE.version = d.tag_name;
+    if (d.published_at) {
+      var dt = new Date(d.published_at);
+      RELEASE.publishedAt = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+    }
+    if (d.author && d.author.login) RELEASE.author = d.author.login;
+    if (d.html_url) RELEASE.htmlUrl = d.html_url;
+    if (d.assets && d.assets.length > 0) {
+      var a = d.assets[0];
+      if (a.name) RELEASE.fileName = a.name;
+      if (a.size) RELEASE.fileSize = (a.size / 1048576).toFixed(2) + ' MB';
+      if (typeof a.download_count === 'number') RELEASE.downloadCount = a.download_count.toLocaleString();
+      if (a.browser_download_url) GITHUB_RELEASE_URL = a.browser_download_url;
+    }
+    releaseFetched = true;
+    var n = document.getElementById('header-filename');
+    if (n) n.textContent = RELEASE.fileName;
+    var sz = document.getElementById('header-size');
+    if (sz) sz.textContent = RELEASE.fileSize;
+    var p = document.getElementById('header-repo');
+    if (p) p.textContent = currentRepoInfo.fullName;
+    var repoLink = document.getElementById('header-repo-link');
+    if (repoLink) { repoLink.href = GITHUB_REPO_URL; repoLink.classList.remove('hidden'); }
+    var directLink = document.getElementById('direct-release-link');
+    if (directLink) directLink.href = GITHUB_REPO_URL + '/releases/latest';
+  } catch (e) {
+    console.error('获取 Release 信息失败:', e);
+    document.getElementById('testing-status').classList.add('hidden');
+    document.getElementById('live-list').classList.add('hidden');
+    var errorCard = document.getElementById('error-card');
+    document.getElementById('error-title').textContent = '获取仓库信息失败';
+    document.getElementById('error-desc').textContent = '无法获取该仓库的最新 Release 信息，请检查链接是否正确或仓库是否存在。';
+    errorCard.classList.remove('hidden');
+    throw e;
+  }
+}
+
+async function measureLatency(url, timeout) {
+  timeout = timeout || LATENCY_TIMEOUT;
+  var s = performance.now();
+  var c = new AbortController();
+  var t = setTimeout(function() { c.abort(); }, timeout);
+  try {
+    await fetch(url + (url.indexOf('?') > -1 ? '&' : '?') + '_t=' + Date.now(), { method: 'HEAD', mode: 'no-cors', signal: c.signal });
+    clearTimeout(t);
+    return {success: true, latency: Math.round(performance.now() - s)};
+  } catch (e) {
+    clearTimeout(t);
+    return {success: false, latency: timeout, error: e.name === 'AbortError' ? '超时' : '失败'};
+  }
+}
+
+function measureSpeedByMultiplePings(proxyUrl) {
+  return new Promise(function(resolve) {
+    var pings = [];
+    var count = 0;
+    var maxP = PING_COUNT;
+    var testUrl = proxyUrl + GITHUB_RELEASE_URL;
+    function doPing() {
+      if (count >= maxP) {
+        var vp = pings.filter(function(p) { return p < 10000; });
+        if (!vp.length) { resolve({success: false, speed: 0, error: '全部超时', hasAnomaly: true}); return; }
+        var sorted = vp.slice().sort(function(a, b) { return a - b; });
+        if (sorted.length > 2) sorted = sorted.slice(1, -1);
+        var median = sorted[Math.floor(sorted.length / 2)];
+        var avg = vp.reduce(function(a, b) { return a + b; }, 0) / vp.length;
+        var v = vp.reduce(function(a, b) { return a + Math.pow(b - avg, 2); }, 0) / vp.length;
+        var st = Math.sqrt(v) / Math.max(avg, 1);
+        var maxPing = Math.max.apply(null, vp);
+        var hasAnomaly = maxPing > median * ANOMALY_RATIO;
+        var bs = 0;
+        if (median < 300) bs = 2500;
+        else if (median < 500) bs = 1500;
+        else if (median < 1000) bs = 800;
+        else if (median < 2000) bs = 300;
+        else if (median < 5000) bs = 100;
+        else bs = 20;
+        var f = Math.max(.5, 1 - st);
+        var sp = bs * f;
+        if (hasAnomaly) sp = sp * ANOMALY_PENALTY;
+        var noteText = vp.length + '次采样';
+        noteText += hasAnomaly ? ' · 延迟异常' : ' · 稳定';
+        resolve({ success: true, speed: parseFloat(sp.toFixed(0)), stability: parseFloat(st.toFixed(2)), hasAnomaly: hasAnomaly, note: noteText });
+        return;
+      }
+      var s = performance.now();
+      var c = new AbortController();
+      var t = setTimeout(function() { c.abort(); }, SPEED_TIMEOUT);
+      fetch(testUrl + '?_t=' + Date.now() + '_' + count, { method: 'HEAD', mode: 'no-cors', signal: c.signal })
+        .then(function() { clearTimeout(t); pings.push(performance.now() - s); count++; setTimeout(doPing, PING_INTERVAL); })
+        .catch(function() { clearTimeout(t); pings.push(10000); count++; setTimeout(doPing, PING_INTERVAL); });
+    }
+    doPing();
+  });
+}
+
+function getScore(l, s) {
+  var ls = Math.max(0, 100 - (l / 5000) * 100);
+  var ss = Math.min(100, (s / 3072) * 100);
+  return Math.round(ls * .3 + ss * .7);
+}
+
+function scoreColor(s) {
+  if (s >= 80) return {bg: 'bg-emerald-50', text: 'text-emerald-600'};
+  if (s >= 60) return {bg: 'bg-amber-50', text: 'text-amber-600'};
+  if (s >= 30) return {bg: 'bg-orange-50', text: 'text-orange-600'};
+  return {bg: 'bg-red-50', text: 'text-red-600'};
+}
+
+function latencyLabel(ms) {
+  if (ms < 500) return {text: '极速', cls: 'text-emerald-600'};
+  if (ms < 2000) return {text: '可用', cls: 'text-amber-600'};
+  return {text: '较慢', cls: 'text-orange-600'};
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  t.style.animation = 'fadeInUp .3s ease';
+  clearTimeout(t._t);
+  t._t = setTimeout(function() { t.style.animation = 'fadeIn .25s ease reverse forwards'; setTimeout(function() { t.classList.add('hidden'); }, 250); }, 2000);
+}
+
+function triggerDownload(url, filename) {
+  var a = document.createElement('a');
+  a.href = url;
+  if (filename) a.download = filename;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function showProgress(label, cur, total) {
+  document.getElementById('progress-label').textContent = label;
+  document.getElementById('progress-count').textContent = cur + ' / ' + total;
+  var pct = Math.round(cur / total * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  syncTyping(pct);
+}
+
+function setStatus(t) { document.getElementById('status-text').textContent = t; }
+
+var _rowMap = {};
+var _listReady = false;
+var _flipCleanup = null;
+
+function _getPhase(item) {
+  if (item._skip) return 'skipped';
+  if (item._tl) return 'testing-latency';
+  if (item._ts) return 'testing-speed';
+  if (item._ld && !item.latencySuccess) return 'failed';
+  if (item._ld && !item._sd) return 'latency-done';
+  if (item._sd) return item.speedSuccess ? 'speed-done' : 'failed';
+  return 'waiting';
+}
+
+function _statusHtml(item, phase) {
+  if (phase === 'waiting') return '<span class="text-xs text-slate-300">等待中</span>';
+  if (phase === 'testing-latency') return '<span class="text-xs text-indigo-500 font-medium">测延迟中...</span>';
+  if (phase === 'testing-speed') return '<span class="text-xs text-indigo-500 font-medium">测速度中...</span>';
+  if (phase === 'skipped') return '<span class="text-xs text-slate-300">延迟过高，已跳过</span>';
+  if (phase === 'latency-done') {
+    return item.latencySuccess ? '<span class="text-xs font-mono ' + latencyLabel(item.latency).cls + '">' + item.latency + 'ms</span>' : '<span class="text-xs text-red-400">不可用</span>';
+  }
+  if (phase === 'speed-done') {
+    if (item.speedSuccess) {
+      var speedText = item.speed >= 1024 ? (item.speed / 1024).toFixed(1) + ' MB/s' : item.speed + ' KB/s';
+      var anomalyTag = item.hasAnomaly ? '<span class="text-xs ml-1.5 text-orange-500">延迟异常</span>' : '<span class="text-xs ml-1.5 text-emerald-500">稳定</span>';
+      return '<span class="text-xs font-mono text-slate-600">' + speedText + '</span>' + anomalyTag;
+    }
+    return '<span class="text-xs text-red-400">失败</span>';
+  }
+  if (phase === 'failed') return '<span class="text-xs text-red-400">不可用</span>';
+  return '';
+}
+
+function _rowOpacityClass(phase) {
+  if (phase === 'failed') return 'opacity-40';
+  if (phase === 'waiting' || phase === 'skipped') return 'opacity-50';
+  return '';
+}
+
+function _rowInnerHtml(item) {
+  var phase = _getPhase(item);
+  return '<div class="flex items-center gap-3">' +
+    '<span class="text-sm font-medium text-slate-700 whitespace-nowrap">' + item.name + '</span>' +
+    '<span class="text-xs text-slate-400 whitespace-nowrap">' + item.desc + '</span>' +
+    '</div>' +
+    '<div class="whitespace-nowrap flex items-center">' + _statusHtml(item, phase) + '</div>';
+}
+
+function _getSortedOrder() {
+  var indices = [];
+  for (var i = 0; i < proxyResults.length; i++) indices.push(i);
+  var inSpeedPhase = proxyResults.some(function(r) { return r._sd || r._ts; });
+  indices.sort(function(a, b) {
+    var ra = proxyResults[a], rb = proxyResults[b];
+    if (inSpeedPhase) {
+      var aRank = ra.speedSuccess ? 3 : (ra._ld && ra.latencySuccess && !ra._skip) ? 2 : (ra._ld ? 1 : 0);
+      var bRank = rb.speedSuccess ? 3 : (rb._ld && rb.latencySuccess && !rb._skip) ? 2 : (rb._ld ? 1 : 0);
+      if (aRank !== bRank) return bRank - aRank;
+      if (aRank === 3 && bRank === 3) return rb.speed - ra.speed;
+      if (aRank === 2 && bRank === 2) return ra.latency - rb.latency;
+      return 0;
+    } else {
+      var aRank2 = (ra._ld && ra.latencySuccess) ? 2 : (ra._ld ? 1 : 0);
+      var bRank2 = (rb._ld && rb.latencySuccess) ? 2 : (rb._ld ? 1 : 0);
+      if (aRank2 !== bRank2) return bRank2 - aRank2;
+      if (aRank2 === 2 && bRank2 === 2) return ra.latency - rb.latency;
+      return 0;
+    }
+  });
+  return indices;
+}
+
+function initLiveList() {
+  var c = document.getElementById('live-list');
+  c.classList.remove('hidden');
+  c.innerHTML = '';
+  _rowMap = {};
+  for (var i = 0; i < proxyResults.length; i++) {
+    var item = proxyResults[i];
+    var row = document.createElement('div');
+    row.setAttribute('data-idx', i);
+    var phase = _getPhase(item);
+    row.className = 'live-row flex items-center justify-between px-4 py-2.5 rounded-xl bg-white border border-slate-100 ' + _rowOpacityClass(phase);
+    row.style.animation = 'fadeInUp .35s cubic-bezier(.16,1,.3,1) both';
+    row.style.animationDelay = (i * 30) + 'ms';
+    row.innerHTML = _rowInnerHtml(item);
+    c.appendChild(row);
+    _rowMap[i] = row;
+  }
+  _listReady = true;
+}
+
+function updateLiveList() {
+  if (!_listReady) { initLiveList(); return; }
+  var c = document.getElementById('live-list');
+  clearTimeout(_flipCleanup);
+  for (var i = 0; i < proxyResults.length; i++) { _rowMap[i].style.transition = 'none'; _rowMap[i].style.transform = ''; }
+  c.offsetHeight;
+  for (var i = 0; i < proxyResults.length; i++) {
+    var row = _rowMap[i];
+    var item = proxyResults[i];
+    var phase = _getPhase(item);
+    row.className = 'live-row flex items-center justify-between px-4 py-2.5 rounded-xl bg-white border border-slate-100 ' + _rowOpacityClass(phase);
+    row.style.animation = '';
+    row.style.animationDelay = '';
+    row.innerHTML = _rowInnerHtml(item);
+  }
+  var firstRects = {};
+  for (var i = 0; i < proxyResults.length; i++) { firstRects[i] = _rowMap[i].getBoundingClientRect(); }
+  var sorted = _getSortedOrder();
+  for (var i = 0; i < sorted.length; i++) { c.appendChild(_rowMap[sorted[i]]); }
+  var moved = false;
+  for (var i = 0; i < proxyResults.length; i++) {
+    var first = firstRects[i];
+    var last = _rowMap[i].getBoundingClientRect();
+    var deltaY = first.top - last.top;
+    if (Math.abs(deltaY) > 0.5) { moved = true; _rowMap[i].style.transform = 'translateY(' + deltaY + 'px)'; }
+  }
+  if (moved) {
+    c.offsetHeight;
+    for (var i = 0; i < proxyResults.length; i++) {
+      if (_rowMap[i].style.transform) {
+        _rowMap[i].style.transition = 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)';
+        _rowMap[i].style.transform = 'translateY(0)';
+      }
+    }
+    _flipCleanup = setTimeout(function() {
+      for (var i = 0; i < proxyResults.length; i++) { if (_rowMap[i]) { _rowMap[i].style.transition = ''; _rowMap[i].style.transform = ''; } }
+    }, 500);
+  }
+}
+
+function renderFinal(totalTime) {
+  var avail = proxyResults.filter(function(r) { return r.latencySuccess && r.speedSuccess; });
+  avail.sort(function(a, b) { return getScore(b.latency, b.speed) - getScore(a.latency, a.speed); });
+  var best = null;
+  var isFallback = false;
+  if (!avail.length) {
+    best = { name: 'dl.axxxx.cyou', url: FALLBACK_PROXY, latency: 0, speed: 0, hasAnomaly: false };
+    isFallback = true;
+  } else {
+    best = avail[0];
+  }
+  var bs = best.latency ? getScore(best.latency, best.speed) : 0;
+  var bt = best.speed >= 1024 ? (best.speed / 1024).toFixed(1) + ' MB/s' : best.speed + ' KB/s';
+  var du = best.url + GITHUB_RELEASE_URL;
+  var sc = scoreColor(bs);
+  var stabilityText = best.hasAnomaly ? '延迟异常' : '稳定';
+  var stabilityCls = best.hasAnomaly ? 'text-orange-500' : 'text-emerald-600';
+  if (isFallback) {
+    stabilityText = '备用线路';
+    stabilityCls = 'text-amber-600';
+  }
+  var h = '<div class="anim-card"><div class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">';
+  h += '<div class="px-6 pt-5 pb-4"><div class="flex items-center gap-2.5 mb-4">';
+  h += '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-semibold whitespace-nowrap"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>最优线路</span>';
+  if (!isFallback) {
+    h += '<span class="inline-flex items-center px-2.5 py-1 rounded-lg ' + sc.bg + ' ' + sc.text + ' text-xs font-semibold whitespace-nowrap">' + bs + ' 分</span>';
+  }
+  h += '<span class="inline-flex items-center px-2 py-1 rounded-lg ' + (isFallback ? 'bg-amber-50 text-amber-600' : (best.hasAnomaly ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600')) + ' text-xs font-medium whitespace-nowrap">' + stabilityText + '</span>';
+  h += '</div>';
+  h += '<h2 class="text-lg font-bold text-slate-900 mb-0.5">' + RELEASE.fileName + '</h2>';
+  h += '<p class="text-sm text-slate-400">' + RELEASE.version + '</p></div>';
+  h += '<div class="px-6 pb-5"><div class="grid grid-cols-2 sm:grid-cols-4 gap-3">';
+  h += mi('版本', RELEASE.version) + mi('更新时间', RELEASE.publishedAt) + mi('作者', RELEASE.author) + mi('线路', isFallback ? '备用' : '主线');
+  h += mi('文件名', RELEASE.fileName) + mi('大小', RELEASE.fileSize) + mi('下载量', RELEASE.downloadCount) + mi('通道', best.name);
+  h += '</div></div>';
+  h += '<div class="border-t border-slate-100 px-6 py-4">';
+  h += '<div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-slate-500 mb-4">';
+  if (!isFallback) {
+    h += '<span class="whitespace-nowrap">延迟 <span class="font-mono font-medium text-slate-700">' + best.latency + 'ms</span></span>';
+    h += '<span class="whitespace-nowrap">速度 <span class="font-mono font-medium text-slate-700">' + bt + '</span></span>';
+    h += '<span class="whitespace-nowrap">稳定性 <span class="font-mono font-medium ' + stabilityCls + '">' + stabilityText + '</span></span>';
+  }
+  h += '<span class="whitespace-nowrap">测速耗时 <span class="font-mono font-medium text-slate-700">' + totalTime + 's</span></span></div>';
+  h += '<div class="flex flex-wrap items-center gap-2.5">';
+  h += '<a href="' + du + '" target="_blank" rel="noopener" class="btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium whitespace-nowrap shadow-md shadow-indigo-500/15"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>立即下载最新版</a>';
+  h += '<a href="' + RELEASE.htmlUrl + '" target="_blank" rel="noopener" class="btn-outline inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium whitespace-nowrap"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>在 GitHub 中查看</a>';
+  h += '</div></div></div></div>';
+  document.getElementById('best-card').innerHTML = h;
+  document.getElementById('best-card').classList.remove('hidden');
+  if (!isFallback && avail.length > 1) {
+    var bh = '<div class="anim-card" style="animation-delay:.12s"><div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5"><h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3.5">备用线路</h3><div class="space-y-2">';
+    for (var j = 1; j < avail.length; j++) {
+      var r = avail[j];
+      var rs = getScore(r.latency, r.speed);
+      var rsc = scoreColor(rs);
+      var rt = r.speed >= 1024 ? (r.speed / 1024).toFixed(1) + ' MB/s' : r.speed + ' KB/s';
+      var ru = r.url + GITHUB_RELEASE_URL;
+      var dl = .08 * j;
+      var rStabText = r.hasAnomaly ? '延迟异常' : '稳定';
+      var rStabCls = r.hasAnomaly ? 'text-orange-500' : 'text-emerald-600';
+      bh += '<div class="route-row flex items-center justify-between px-4 py-3 rounded-xl border border-slate-100 anim-row" style="animation-delay:' + dl + 's">';
+      bh += '<div class="flex items-center gap-3 min-w-0"><span class="text-xs font-mono text-slate-300 w-5 shrink-0">#' + (j + 1) + '</span><div class="min-w-0"><div class="text-sm font-medium text-slate-700 whitespace-nowrap truncate">' + r.name + '</div><div class="text-xs text-slate-400 whitespace-nowrap">' + r.latency + 'ms · ' + rt + ' · <span class="' + rStabCls + '">' + rStabText + '</span></div></div></div>';
+      bh += '<div class="flex items-center gap-2.5 shrink-0 ml-3"><span class="inline-flex items-center px-2 py-0.5 rounded-md ' + rsc.bg + ' ' + rsc.text + ' text-xs font-semibold whitespace-nowrap">' + rs + ' 分</span>';
+      bh += '<a href="' + ru + '" target="_blank" rel="noopener" class="btn-ghost inline-flex items-center px-3 py-1.5 rounded-lg text-slate-500 text-xs font-medium whitespace-nowrap border border-transparent hover:border-slate-200">下载</a></div></div>';
+    }
+    bh += '</div></div></div>';
+    document.getElementById('backup-section').innerHTML = bh;
+    document.getElementById('backup-section').classList.remove('hidden');
+  }
+  document.getElementById('retest-area').classList.remove('hidden');
+  document.getElementById('testing-status').classList.add('hidden');
+  document.getElementById('live-list').classList.add('hidden');
+  if (AUTO_DOWNLOAD) {
+    setTimeout(function() {
+      triggerDownload(du, RELEASE.fileName);
+      showToast(isFallback ? '线路繁忙，使用备用下载' : '已选择最快线路，开始下载');
+    }, 400);
+  }
+}
+
+function mi(l, v) {
+  return '<div class="meta-card px-3 py-2.5 rounded-xl border border-slate-100"><div class="text-xs text-slate-400 mb-0.5 whitespace-nowrap">' + l + '</div><div class="text-sm font-medium text-slate-700 truncate">' + v + '</div></div>';
+}
+
+function applyLatencyResult(item, result) {
+  item.latency = result.latency;
+  item.latencySuccess = result.success;
+  item.latencyError = result.error || '';
+  item._tl = false;
+  item._ld = true;
+  if (item.latencySuccess && item.latency >= LATENCY_CUTOFF) {
+    item._skip = true;
+    item.speedTested = true;
+    item.speedSuccess = false;
+    item.speedError = '延迟过高已跳过';
+    item._sd = true;
+  }
+}
+
+async function runAllTests() {
+  if (isTesting) return;
+  isTesting = true;
+  initTopStatus();
+  document.getElementById('best-card').classList.add('hidden');
+  document.getElementById('best-card').innerHTML = '';
+  document.getElementById('backup-section').classList.add('hidden');
+  document.getElementById('backup-section').innerHTML = '';
+  document.getElementById('no-routes').classList.add('hidden');
+  document.getElementById('retest-area').classList.add('hidden');
+  document.getElementById('error-card').classList.add('hidden');
+  document.getElementById('testing-status').classList.remove('hidden');
+  document.getElementById('live-list').innerHTML = '';
+  document.getElementById('live-list').classList.remove('hidden');
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('progress-bar').className = 'h-full rounded-full shimmer-bar transition-all duration-500 ease-out';
+  document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-indigo-500 pulse-dot';
+  document.getElementById('elapsed-area').classList.remove('hidden');
+  proxyResults = [];
+  _listReady = false;
+  _rowMap = {};
+  clearTimeout(_flipCleanup);
+  startTimer();
+  releaseFetched = false;
+  try { await fetchRelease(); } catch (e) { stopTimer(); isTesting = false; return; }
+  _phase = 'latency';
+  setStatus('正在并行测试代理延迟...');
+  for (var i = 0; i < GITHUB_PROXIES.length; i++) {
+    var proxy = GITHUB_PROXIES[i];
+    proxyResults.push({
+      name: proxy.name, url: proxy.url, desc: proxy.desc,
+      latency: 0, latencySuccess: false, latencyError: '',
+      speed: 0, speedTested: false, speedSuccess: false, speedError: '', speedNote: '', hasAnomaly: false,
+      _tl: true, _ts: false, _ld: false, _sd: false, _skip: false
+    });
+  }
+  updateLiveList();
+  showProgress('延迟测试', 0, GITHUB_PROXIES.length);
+  var latencyPromises = proxyResults.map(function(item, idx) {
+    var testUrl = item.url + GITHUB_RELEASE_URL + '?_t=' + Date.now() + '_' + idx;
+    return measureLatency(testUrl, LATENCY_TIMEOUT).then(function(result) {
+      applyLatencyResult(item, result);
+      updateLiveList();
+      showProgress('延迟测试', proxyResults.filter(function(r) { return r._ld; }).length, GITHUB_PROXIES.length);
+      return item;
+    });
+  });
+  await Promise.allSettled(latencyPromises);
+  var failedItems = proxyResults.filter(function(r) { return r._ld && !r.latencySuccess && !r._skip; });
+  if (failedItems.length > 0) {
+    setStatus('重试失败的线路...');
+    await new Promise(function(r) { setTimeout(r, RETRY_DELAY); });
+    for (var fi = 0; fi < failedItems.length; fi++) { failedItems[fi]._tl = true; failedItems[fi]._ld = false; }
+    updateLiveList();
+    var retryPromises = failedItems.map(function(item, idx) {
+      var testUrl = item.url + GITHUB_RELEASE_URL + '?_t=' + Date.now() + '&retry=1_' + idx;
+      return measureLatency(testUrl, LATENCY_TIMEOUT).then(function(result) {
+        applyLatencyResult(item, result);
+        updateLiveList();
+        showProgress('延迟测试', proxyResults.filter(function(r) { return r._ld; }).length, GITHUB_PROXIES.length);
+        return item;
+      });
+    });
+    await Promise.allSettled(retryPromises);
+  }
+  ensureSeg(0);
+  addSeg('正在测试线路稳定性...', 'text-slate-400');
+  _phase = 'speed';
+  var avail = proxyResults.filter(function(r) { return r.latencySuccess && !r._skip; });
+  if (avail.length === 0) {
+    var totalTime = stopTimer();
+    document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-amber-500';
+    document.getElementById('progress-bar').className = 'h-full rounded-full bg-amber-400 transition-all duration-500 ease-out';
+    document.getElementById('progress-bar').style.width = '100%';
+    setStatus('测速完成（使用备用线路）');
+    ensureSeg(1);
+    _segs.push({text: '解析成功 ! !', cls: 'text-amber-500'});
+    _segs.push({text: '本次耗时 ' + totalTime + 's', cls: 'text-slate-400'});
+    calcTopFs();
+    await fastTypeToEnd();
+    renderFinal(totalTime);
+    isTesting = false;
+    return;
+  }
+  setStatus('正在测试线路稳定性...');
+  showProgress('稳定性测速', 0, avail.length);
+  var speedPromises = avail.map(function(item) {
+    item._ts = true;
+    updateLiveList();
+    return measureSpeedByMultiplePings(item.url).then(function(sr) {
+      item.speedTested = true;
+      item.speedSuccess = sr.success;
+      item.speed = sr.speed;
+      item.speedError = sr.error || '';
+      item.speedNote = sr.note || '';
+      item.hasAnomaly = sr.hasAnomaly || false;
+      item._ts = false;
+      item._sd = true;
+      updateLiveList();
+      showProgress('稳定性测速', avail.filter(function(r) { return r._sd; }).length, avail.length);
+      return item;
+    });
+  });
+  await Promise.allSettled(speedPromises);
+  var totalTime = stopTimer();
+  document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+  document.getElementById('progress-bar').className = 'h-full rounded-full bg-emerald-500 transition-all duration-500 ease-out';
+  document.getElementById('progress-bar').style.width = '100%';
+  setStatus('测速完成');
+  ensureSeg(1);
+  var goodOnes = proxyResults.filter(function(r) { return r.latencySuccess && r.speedSuccess; });
+  _segs.push({text: '解析成功 ! !', cls: goodOnes.length > 0 ? 'text-emerald-500' : 'text-amber-500'});
+  _segs.push({text: '本次耗时 ' + totalTime + 's', cls: 'text-slate-400'});
+  _segs.push({text: '如下载缓慢，请切换下方其他线路', cls: 'text-indigo-400'});
+  calcTopFs();
+  await fastTypeToEnd();
+  await new Promise(function(r) { setTimeout(r, 300); });
+  renderFinal(totalTime);
+  isTesting = false;
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  var urlParam = getQueryParam('url');
+  var repoInfo = parseGitHubRepoUrl(urlParam);
+  if (!repoInfo) {
+    var errorCard = document.getElementById('error-card');
+    document.getElementById('error-title').textContent = '参数错误';
+    document.getElementById('error-desc').textContent = '请提供有效的 GitHub 仓库链接作为 url 参数';
+    errorCard.classList.remove('hidden');
+    document.getElementById('testing-status').classList.add('hidden');
+    return;
+  }
+  currentRepoInfo = repoInfo;
+  GITHUB_REPO_URL = 'https://github.com/' + repoInfo.fullName;
+  setTimeout(function() { autoFitFooter(); runAllTests(); }, 300);
+});
+
+window.addEventListener('resize', function() {
+  autoFitFooter();
+  calcTopFs();
+  var p = document.querySelector('#top-status p');
+  if (p && _targetFs) p.style.fontSize = _targetFs;
+});
+</script>
+</body>
+</html>
