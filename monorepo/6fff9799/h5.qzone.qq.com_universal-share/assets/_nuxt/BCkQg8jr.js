@@ -1,0 +1,1 @@
+import{_ as o}from"./CCYdsWj6.js";import{u as n}from"./Dzhsznyb.js";import{d as s,q as a,o as r,F as _,G as c,x as l}from"./LPW56aBP.js";import"./C1l3m8vg.js";import"./DHIOzD2q.js";const p={class:"client-app"},k=s({__name:"client",setup(i){return n(),(t,m)=>{const e=o;return r(),a("div",p,[_(e,null,{default:c(()=>[l(t.$slots,"default")]),_:3})])}}});export{k as default};

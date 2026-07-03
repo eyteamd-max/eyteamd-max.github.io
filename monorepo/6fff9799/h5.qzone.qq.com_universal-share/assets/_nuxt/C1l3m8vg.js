@@ -1,0 +1,1 @@
+import{a as s}from"./DHIOzD2q.js";const a=r=>{let e;const t=r.match(/QQTheme\/(\d+)/);return t&&([,e]=t),e};function d(){const e=s()["user-agent"],t=typeof navigator=="undefined"?e:navigator.userAgent,n=parseInt(a(t),10);return[2920,1102,1103,2033711].indexOf(n)>-1?"dark":"light"}export{d as u};
