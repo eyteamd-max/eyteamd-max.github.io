@@ -1,0 +1,37 @@
+[
+  {
+    "version": "v0.1.5",
+    "date": "2026-06-20",
+    "size": "66.92MB",
+    "description": "- 修复 v0.107.1 游戏结束后卡死。 - 修复创意工坊有时无法下载的问题。 - 修复创意工坊下载时卡顿的问题。 - 修复在启动器设置旋转 auto 模式不保存生效的问题。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/6ur1p306218f963d245ec99f47a817fc7dc16?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.1.4",
+    "date": "2026-06-20",
+    "size": "66.92MB",
+    "description": "- 新增 Steam 创意工坊页面 （感谢Apricityx的WorkshopAndroidDownloader项目提供的参考） - 新增v0.107.1兼容包 - 自动旋转功能 - 改进启动器系统栏/安全区域适配，避免沉浸式页面状态栏遮挡。 - 修复本地 LAN 多人存档玩家 ID canonicalization，避免平台/玩家 ID 后旧多人存档被误判为非本机。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/6ur1pb0ebeb4863df49b39fc8097a0e33c2b7?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.1.3",
+    "date": "2026-06-13",
+    "size": "66.50MB",
+    "description": "- 增加 WebDAV 云存档中心 - 新增本地存档快照 - 改进横屏/平板启动器布局、设置页分区、主页状态卡和 MOD 导入冲突保护。 - 支持高刷，增加高刷新率请求、引入用于查看帧数的性能覆盖层 - 支持设置屏幕自动旋转 - 更多预加载选项，更细的 Android 预加载/缓存控制机制 - 增加 ADB 自动化调试入口，用于安装、推送 payload/compat/MOD、准备启动、采集日志和性能 trace。 - 修复或缓解多处兼容层问题，包括 v0.107.0 MOD importer shim、地图绘制、早期本地化 fallback、InitId guard、延迟高风险 UI mod patch 以及战斗/VFX 预热覆盖。修复了很多导致MOD无法加载的时序问题。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/6ur1p9dc13fa5dd7549008a8e59f03a9ba99e?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.1.1",
+    "date": "2026-06-08",
+    "size": "65.98MB",
+    "description": "修复鸿蒙设备启动问题 修复一些设备上字体图标显示不出来的问题（改用矢量图标） 修复先古卡牌显示为白色的问题 新增了logcat日志sts2.log 新增局域网联机Patch开关 修复大厅mod连接超时问题",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz3275a5209ceb44dcb86d40730dc1509f?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.1.0",
+    "date": "2026-06-07",
+    "size": "66.65MB",
+    "description": "修复联机大厅跨端联机连不上的BUG",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz4572e7b1dcbb438dbf1d2a1678cdce5a?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  }
+]
