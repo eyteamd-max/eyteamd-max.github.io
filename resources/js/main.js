@@ -1019,6 +1019,17 @@
             h += '<div class="eh">暂无直接下载链接</div>';
         }
         h += '</div></div></div>';
+        if (cl.alternative.length) {
+            h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">测试分支版本<span class="sc">(' + cl.alternative.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
+            cl.alternative.forEach(function (dl, i) {
+                h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
+                h += gDLM(dl);
+                h += '</div>';
+                if (dl.desc) h += '<div class="id" id="aD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="aD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
+                h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '前往</a></div>';
+            });
+            h += '</div></div></div>';
+        }
         h += '<div class="sl"><span>更多</span></div>';
         h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">历史版本<span class="sc">' + (cl.history.length ? '(' + cl.history.length + ')' : '') + '</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
         if (cl.history.length) {
@@ -1033,17 +1044,6 @@
             h += '<div class="eh">暂无历史版本</div>';
         }
         h += '</div></div></div>';
-        if (cl.alternative.length) {
-            h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">测试分支版本<span class="sc">(' + cl.alternative.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
-            cl.alternative.forEach(function (dl, i) {
-                h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
-                h += gDLM(dl);
-                h += '</div>';
-                if (dl.desc) h += '<div class="id" id="aD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="aD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
-                h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '前往</a></div>';
-            });
-            h += '</div></div></div>';
-        }
         var au = pA(mod.author || '佚名'), awl = mLA(au, mod.authorLinks || []), is = awl.length === 1 && !awl[0].role;
         h += '<div class="sl"><span>作者</span></div><div class="as' + (is ? ' sa' : '') + '">';
         awl.forEach(function (a) {
