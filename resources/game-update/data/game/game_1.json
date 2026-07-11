@@ -1,0 +1,44 @@
+[
+  {
+    "version": "v0.108.0",
+    "date": "2026-07-11",
+    "size": "870.11MB",
+    "description": "视觉表现与功能完善补丁。实装第三幕BOSS“永恒沙漏”的完整动态动画演出；为删卡、消耗及无源奥布等核心操作新增专属视觉特效；加入大量多人模式新卡牌，并修复充能球与再生药水触发顺序导致的意外死亡问题，同步优化模组适配与底层稳定性。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/dzw8s74f77a76d6a1453eb6251fa7d752d9cc?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.107.1",
+    "date": "2026-06-20",
+    "size": "865.41MB",
+    "description": "底层修复与功能拓展补丁。彻底重写随机数生成器（采用xoshiro256算法）修复卡牌抽取概率偏差的公平性问题；重磅新增Steam创意工坊与怪物图鉴；移除Boss门扉，由永恒沙漏正式取代。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/6ur1pe3548292205f482b9c94ccafe441a9c3?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.103.2",
+    "date": "2026-06-05",
+    "size": "829.44MB",
+    "description": "首个大更新！重做进阶6（删卡变贵），数值锁上限并移除纪元遗物以强力限制无限流，Boss重做，新增徽章与恐惧症模式。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6b56a9c2329149028afac59056d22849?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.103.3",
+    "date": "2026-06-05",
+    "size": "829.44MB",
+    "description": "纯修Bug补丁（v0.103.2的修复版）。重点修复游戏崩溃、手柄交互、多人联机及遗物软锁问题，无新机制，纯粹提升稳定性。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz6ff2c90c0b7248249d818620ae68b451?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.106.1",
+    "date": "2026-06-05",
+    "size": "862.12MB",
+    "description": "新Boss修复。专为v0.106.0新增Boss永劫沙漏修Bug，修复其Wither卡牌在金字塔下异常保留、误强化及意图显示错误。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgza86aaebac7d941cf8067bb86a0fd48be?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  },
+  {
+    "version": "v0.107.0",
+    "date": "2026-06-05",
+    "size": "865.39MB",
+    "description": "平衡与体验优化补丁。Boss永劫沙漏移除虚弱效果，一层精英怪加强；全面调整全角色卡牌与遗物数值（如战士Juggernaut加强、摄政王Reflect削弱）；优化UI交互并修复大量Bug，新增角色强化动画。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/05fgz43be7b3709f540b5be6ba344a6212b33?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  }
+]

@@ -1,0 +1,23 @@
+/
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/resources/css/*
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/resources/js/*
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/resources/json/post/**/*.json
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  Expires: Thu, 01 Jan 1970 00:00:00 GMT
+  Pragma: no-cache
+
+/resources/json/config.json
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  Expires: Thu, 01 Jan 1970 00:00:00 GMT
+  Pragma: no-cache
+
+/resources/game-update/data/**/*.json
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+  Expires: Thu, 01 Jan 1970 00:00:00 GMT
+  Pragma: no-cache
