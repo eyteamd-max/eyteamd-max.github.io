@@ -1578,6 +1578,31 @@ body {
     max-width: 380px;
     box-shadow: 0 6px 24px rgba(0,0,0,.12);
     overflow: hidden;
+    position: relative;
+}
+
+.px {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    z-index: 1;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--ts);
+    background: transparent;
+    border: none;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: color .15s;
+    padding: 0;
+}
+
+.px:hover {
+    color: var(--sl);
 }
 
 .ph {
@@ -2241,6 +2266,14 @@ body {
     background: #c97a7a;
     color: #fff;
     border-color: #c97a7a;
+}
+
+.dark .px {
+    color: #9a94a8;
+}
+
+.dark .px:hover {
+    color: #e8a0a0;
 }
 
 .dark .mml {
