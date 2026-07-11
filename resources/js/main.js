@@ -1029,7 +1029,12 @@
             h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">测试分支版本<span class="sc">(' + cl.testBranch.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
             cl.testBranch.forEach(function (dl, i) {
                 h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
-                h += gDLM(dl);
+                var dlMeta = gDLM(dl);
+                if (dlMeta) {
+                    h += dlMeta;
+                } else if (i === 0) {
+                    h += '<span class="dm">' + esc(mod.badge) + ' · ' + esc(mod.size) + ' · ' + esc(mod.date) + '</span>';
+                }
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="tD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="tD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
                 h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
