@@ -430,21 +430,23 @@
     }
 
     function cLL(ls) {
-        var la = [], al = [], hi = [];
-        if (!ls || !ls.length) return { latest: la, alternative: al, history: hi };
+        var la = [], al = [], hi = [], tb = [];
+        if (!ls || !ls.length) return { latest: la, alternative: al, history: hi, testBranch: tb };
         ls.forEach(function (l) {
             if (l.category) {
                 if (l.category === 'history') hi.push(l);
                 else if (l.category === 'alternative') al.push(l);
+                else if (l.category === 'testBranch') tb.push(l);
                 else la.push(l);
             } else {
                 var t = l.text;
                 if (t.includes('兼容') || t.includes('备选') || t.includes('旧版') || t.includes('历史版本')) hi.push(l);
                 else if (t.includes('在线解析') || t.includes('N网') || /官方帖子/.test(t)) al.push(l);
+                else if (t.includes('测试') || t.includes('分支') || t.includes('beta') || /抢先/.test(t)) tb.push(l);
                 else la.push(l);
             }
         });
-        return { latest: la, alternative: al, history: hi };
+        return { latest: la, alternative: al, history: hi, testBranch: tb };
     }
 
     function cOF(te, tg) {
@@ -1019,14 +1021,14 @@
             h += '<div class="eh">暂无直接下载链接</div>';
         }
         h += '</div></div></div>';
-        if (cl.alternative.length) {
-            h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">测试分支版本<span class="sc">(' + cl.alternative.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
-            cl.alternative.forEach(function (dl, i) {
+        if (cl.testBranch.length) {
+            h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">测试分支版本<span class="sc">(' + cl.testBranch.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
+            cl.testBranch.forEach(function (dl, i) {
                 h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
                 h += gDLM(dl);
                 h += '</div>';
-                if (dl.desc) h += '<div class="id" id="aD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="aD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
-                h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '前往</a></div>';
+                if (dl.desc) h += '<div class="id" id="tD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="tD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
+                h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
             });
             h += '</div></div></div>';
         }
@@ -1044,6 +1046,17 @@
             h += '<div class="eh">暂无历史版本</div>';
         }
         h += '</div></div></div>';
+        if (cl.alternative.length) {
+            h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">其他下载方式<span class="sc">(' + cl.alternative.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
+            cl.alternative.forEach(function (dl, i) {
+                h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
+                h += gDLM(dl);
+                h += '</div>';
+                if (dl.desc) h += '<div class="id" id="aD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="aD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
+                h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '前往</a></div>';
+            });
+            h += '</div></div></div>';
+        }
         var au = pA(mod.author || '佚名'), awl = mLA(au, mod.authorLinks || []), is = awl.length === 1 && !awl[0].role;
         h += '<div class="sl"><span>作者</span></div><div class="as' + (is ? ' sa' : '') + '">';
         awl.forEach(function (a) {
