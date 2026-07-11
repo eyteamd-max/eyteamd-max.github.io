@@ -446,6 +446,10 @@
                 else la.push(l);
             }
         });
+        var sk = function (a) { return (a.text.includes('前置') || a.text.includes('解压密码')) ? 1 : 0; };
+        la.sort(function (a, b) { return sk(a) - sk(b); });
+        tb.sort(function (a, b) { return sk(a) - sk(b); });
+        hi.sort(function (a, b) { return sk(a) - sk(b); });
         return { latest: la, alternative: al, history: hi, testBranch: tb };
     }
 

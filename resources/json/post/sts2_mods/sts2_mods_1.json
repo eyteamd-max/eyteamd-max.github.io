@@ -287,7 +287,7 @@
       {
         "text": "＃RitsuLib - 前置＃",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=ritsu&t=v0.4.54",
-        "category": "latest",
+        "category": "testBranch",
         "version": "v0.4.54",
         "size": "7.31MB",
         "date": "2026-07-10"
@@ -295,7 +295,7 @@
       {
         "text": "＃BaseLib - 前置＃",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=baselib&t=v3.3.5",
-        "category": "latest",
+        "category": "testBranch",
         "version": "v3.3.5",
         "size": "382.5KB",
         "date": "2026-07-10"
@@ -303,7 +303,7 @@
       {
         "text": "＃MinionLib - 前置＃",
         "url": "https://files.zohopublic.com.cn/public/workdrive-public/download/dzw8s6d84d805b25045f2aed25b98ae0f6f0f?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D",
-        "category": "latest",
+        "category": "testBranch",
         "version": "v0.6.0",
         "size": "510.82KB",
         "date": "2026-07-10"
@@ -325,7 +325,7 @@
       {
         "text": "＃RitsuLib - 前置＃",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=baselib&t=v3.3.5",
-        "category": "history",
+        "category": "latest",
         "version": "v0.4.54",
         "size": "7.31MB",
         "date": "2026-07-10"
@@ -333,7 +333,7 @@
       {
         "text": "＃BaseLib - 前置＃",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=baselib&t=v3.3.5",
-        "category": "history",
+        "category": "latest",
         "version": "v3.3.5",
         "size": "382.5KB",
         "date": "2026-07-10"
@@ -341,7 +341,7 @@
       {
         "text": "＃MinionLib - 前置＃",
         "url": "https://files.zohopublic.com.cn/public/workdrive-public/download/dzw8s716f6c50cb174b7d8c255892c2ab6c2b?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D",
-        "category": "history",
+        "category": "latest",
         "version": "v0.5.2",
         "size": "510.82KB",
         "date": "2026-07-10"
@@ -1089,7 +1089,7 @@
       {
         "text": "＃BaseLib - 前置＃",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=baselib&t=v3.3.5",
-        "category": "latest",
+        "category": "testBranch",
         "version": "BaseLib3.3.5",
         "size": "382.5KB",
         "date": "推荐"
@@ -1526,7 +1526,7 @@
       {
         "text": "# 前置 - RitsuLib #",
         "url": "https://wsts.pages.dev/resources/STS2-Front/index.html?l=ritsu&t=v0.4.54",
-        "category": "latest",
+        "category": "testBranch",
         "version": "RitsuLib0.4.54",
         "size": "7.31MB",
         "date": "推荐"
@@ -1534,13 +1534,13 @@
       {
         "text": "＃＃ 解压密码 ＃＃",
         "url": "https://axxxx.cyou/resources/link_skip/?link=https://pan.quark.cn/s/f3ed9e0aa29c",
-        "category": "latest",
+        "category": "testBranch",
         "version": "文件里面的密钥就是解压密码❗️❗️"
       },
       {
         "text": "模组本体 - 0.107.0",
         "url": "https://files.zohopublic.com.cn/public/workdrive-public/download/27xz83f679423720a4890b03c9dd57e67989b?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D",
-        "category": "history",
+        "category": "latest",
         "version": "1.29ffix",
         "size": "187.01MB",
         "date": "2026-07-07"
@@ -1703,7 +1703,7 @@
       {
         "text": "# 前置 - RitsuLib #",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=ritsu&t=v0.4.54",
-        "category": "latest",
+        "category": "testBranch",
         "version": "v0.4.54",
         "size": "7.31MB",
         "date": "推荐"
@@ -1711,7 +1711,7 @@
       {
         "text": "# MinionLib - 前置 #",
         "url": "https://files.zohopublic.com.cn/public/workdrive-public/download/27xz82438cc56d94e419cb72982adef183631?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D",
-        "category": "latest",
+        "category": "testBranch",
         "version": "v0.5.2",
         "size": "510.92KB",
         "date": "推荐"
@@ -1789,7 +1789,7 @@
       {
         "text": "# 前置 - RitsuLib #",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=ritsu&t=v0.4.45",
-        "category": "latest",
+        "category": "testBranch",
         "version": "RitsuLib0.4.45",
         "size": "3.62 MB",
         "date": "推荐"
@@ -1872,7 +1872,7 @@
       {
         "text": "# 前置 - RitsuLib #",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=ritsu&t=v0.4.54",
-        "category": "latest",
+        "category": "testBranch",
         "version": "RitsuLib0.4.54",
         "size": "7.31MB",
         "date": "推荐"
@@ -1939,7 +1939,7 @@
       {
         "text": "# 前置 - BaseLib #",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=baselib&t=v3.3.5",
-        "category": "latest",
+        "category": "testBranch",
         "version": "BaseLib 3.3.5",
         "size": "382.5KB",
         "date": "推荐"
@@ -2105,7 +2105,7 @@
       {
         "text": "前置 - BaseLib3.3.5",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=baselib&t=v3.3.5",
-        "category": "latest",
+        "category": "testBranch",
         "version": "v3.3.5",
         "size": "382.5KB",
         "date": "推荐"
@@ -2120,7 +2120,7 @@
       {
         "text": "模组本体 - 0.107.x",
         "url": "https://files.zohopublic.com.cn/public/workdrive-public/download/27xz8ae030294079344afa7651d96b8d23d2d?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D",
-        "category": "history",
+        "category": "latest",
         "version": "v1.1.9",
         "size": "396.39KB",
         "date": "2026-07-07"
@@ -2172,7 +2172,7 @@
       {
         "text": "#  前置  -  RitsuLib  #",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=ritsu&t=v0.4.54",
-        "category": "latest",
+        "category": "testBranch",
         "version": "RitsuLib0.4.54",
         "size": "7.31MB",
         "date": "推荐"
@@ -2186,7 +2186,7 @@
       {
         "text": "模组本体 - 0.107.x",
         "url": "https://files.zohopublic.com.cn/public/workdrive-public/download/27xz807cd342e2ce244fba9333398b4c3673b?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D",
-        "category": "history",
+        "category": "latest",
         "version": "v0.1.5",
         "size": "63.17MB",
         "date": "2026-06-30"
@@ -2514,7 +2514,7 @@
       {
         "text": "＃前置 - BaseLib＃",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=baselib&t=v3.3.5",
-        "category": "latest",
+        "category": "testBranch",
         "version": "BaseLib3.3.5",
         "size": "382.5KB",
         "date": "推荐"
@@ -2522,7 +2522,7 @@
       {
         "text": "＃前置 - RitsuLib＃",
         "url": "https://axxxx.cyou/resources/STS2-Front/index.html?l=ritsu&t=v0.4.53",
-        "category": "latest",
+        "category": "testBranch",
         "version": "RitsuLib0.4.53",
         "size": "7.30MB",
         "date": "推荐"
@@ -3398,7 +3398,7 @@
       {
         "text": "千鹤 - 0.108.x",
         "url": "https://files.zohopublic.com.cn/public/workdrive-public/download/dzw8s83c5c275b35949eb8f34af7fde081c89?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D",
-        "category": "latest"
+        "category": "testBranch"
       },
       {
         "text": "N网下载",
@@ -3411,7 +3411,7 @@
       {
         "text": "千鹤 - 0.107.x",
         "url": "https://files.zohopublic.com.cn/public/workdrive-public/download/dzw8s4ef9086325d34f2a9403cde468a3493e?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D",
-        "category": "history",
+        "category": "latest",
         "version": "v0.6.0",
         "size": "89.18MB",
         "date": "2026-07-10"
