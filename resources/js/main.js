@@ -1160,17 +1160,17 @@
     window._oP = function (prereqs, dlUrl) {
         var h = '';
         prereqs.forEach(function (p) {
-            h += '<div class="pbi"><div class="pbl"><div class="pbin">' + esc(p.text) + '</div>';
-            if (p.version || p.size || p.date) {
+            var name = p.text.replace(/[#＃\s-]+/g, ' ').replace(/^\s+|\s+$/g, '').replace(/前置/g, '').replace(/\s+/g, ' ').trim();
+            h += '<div class="pbi"><div class="pbl"><div class="pbin">' + esc(name) + '</div>';
+            if (p.version || p.size) {
                 var meta = [];
                 if (p.version) meta.push(p.version);
                 if (p.size) meta.push(p.size);
-                if (p.date) meta.push(p.date);
                 h += '<div class="pbie">' + meta.map(function(x){return esc(x)}).join(' · ') + '</div>';
             }
-            h += '</div><a class="pbil" href="#" onclick="event.preventDefault();window.open(\'' + p.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">前往</a></div>';
+            h += '</div><a class="pbil" href="#" onclick="event.preventDefault();window.open(\'' + p.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">获取</a></div>';
         });
-        h += '<div class="pbi" style="border-top:1.5px solid var(--bd);padding-top:14px;margin-top:4px"><div class="pbl"><div class="pbin" style="font-weight:600">已确认前置齐备？</div><div class="pbie">点击下方按钮直接下载模组本体</div></div><a class="pbil" style="background:var(--sl);color:#fff;border-color:var(--sl)" href="#" onclick="event.preventDefault();window.open(\'' + dlUrl + '\',\'_blank\');window._cP()" target="_blank" rel="noopener noreferrer">下载</a></div>';
+        h += '<div class="pbi pblb"><div class="pbl"><div class="pbin" style="font-weight:600">确认已有前置？</div></div><a class="pbil pbdl" href="#" onclick="event.preventDefault();window.open(\'' + dlUrl + '\',\'_blank\');window._cP()" target="_blank" rel="noopener noreferrer">下载</a></div>';
         pB.innerHTML = h;
         pO.classList.add('act');
     };
