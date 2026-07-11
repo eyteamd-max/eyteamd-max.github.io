@@ -1570,7 +1570,7 @@ body {
     display: flex;
 }
 
-.pc {
+.poc {
     background: #fffdfb;
     border: 2px solid var(--bd);
     border-radius: 0;
@@ -1609,11 +1609,11 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 9px 0;
-    border-bottom: 1px dashed var(--bd);
+    border-bottom: none;
 }
 
-.pbi:last-of-type {
-    border-bottom: none;
+.pbi + .pbi:not(.pblb) {
+    border-top: 1px dashed var(--bd);
 }
 
 .pbi.pblb {
@@ -2203,7 +2203,7 @@ body {
     background: rgba(0,0,0,.55);
 }
 
-.dark .pc {
+.dark .poc {
     background: #2a2535;
     border-color: #4a425c;
 }
