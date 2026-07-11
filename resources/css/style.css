@@ -1559,8 +1559,7 @@ body {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(250,247,244,.88);
-    backdrop-filter: blur(10px);
+    background: rgba(0,0,0,.35);
     z-index: 500;
     align-items: center;
     justify-content: center;
@@ -1573,11 +1572,11 @@ body {
 
 .pc {
     background: #fffdfb;
-    border: 2.5px solid var(--bd);
-    border-radius: 14px;
+    border: 2px solid var(--bd);
+    border-radius: 0;
     width: 100%;
     max-width: 380px;
-    box-shadow: 0 8px 30px rgba(0,0,0,.12);
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
     overflow: hidden;
 }
 
@@ -1586,12 +1585,21 @@ body {
     font-size: 1rem;
     font-weight: 600;
     color: var(--tp);
-    border-bottom: 2px solid var(--bd);
-    background: var(--sl-t);
+    position: relative;
+}
+
+.ph::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: 0;
+    height: 2px;
+    background: var(--bd);
 }
 
 .pb {
-    padding: 6px 20px;
+    padding: 6px 20px 10px;
     max-height: 55vh;
     overflow-y: auto;
 }
@@ -1604,7 +1612,7 @@ body {
     border-bottom: 1px dashed var(--bd);
 }
 
-.pbi:last-child {
+.pbi:last-of-type {
     border-bottom: none;
 }
 
@@ -2192,7 +2200,7 @@ body {
 }
 
 .dark .po {
-    background: rgba(30,27,37,.88);
+    background: rgba(0,0,0,.55);
 }
 
 .dark .pc {
@@ -2200,9 +2208,8 @@ body {
     border-color: #4a425c;
 }
 
-.dark .ph, .dark .pf {
-    background: rgba(255,255,255,.04);
-    border-color: #4a425c;
+.dark .ph::after {
+    background: #4a425c;
 }
 
 .dark .pbi {

@@ -1168,9 +1168,9 @@
                 if (p.size) meta.push(p.size);
                 h += '<div class="pbie">' + meta.map(function(x){return esc(x)}).join(' · ') + '</div>';
             }
-            h += '</div><a class="pbil" href="#" onclick="event.preventDefault();window.open(\'' + p.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">获取</a></div>';
+            h += '</div><a class="pbil" href="#" onclick="event.preventDefault();window.open(\'' + p.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">安装</a></div>';
         });
-        h += '<div class="pbi pblb"><div class="pbl"><div class="pbin" style="font-weight:600">确认已有前置？</div></div><a class="pbil pbdl" href="#" onclick="event.preventDefault();window.open(\'' + dlUrl + '\',\'_blank\');window._cP()" target="_blank" rel="noopener noreferrer">下载</a></div>';
+        h += '<div class="pbi pblb"><div class="pbl"><div class="pbin" style="font-weight:600">确认已有前置？直接下载模组本体 →</div></div><a class="pbil pbdl" href="#" onclick="event.preventDefault();window.open(\'' + dlUrl + '\',\'_blank\');window._cP()" target="_blank" rel="noopener noreferrer">下载</a></div>';
         pB.innerHTML = h;
         pO.classList.add('act');
     };
