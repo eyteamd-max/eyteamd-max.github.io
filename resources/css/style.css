@@ -1607,6 +1607,10 @@ body {
     padding-bottom: 0;
 }
 
+.pbi:has(+ .pblb) {
+    border-bottom: none;
+}
+
 .pbi.pblb {
     border-top: 1.5px solid #ede8e2;
     border-bottom: none;
