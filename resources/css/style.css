@@ -1564,10 +1564,13 @@ body {
     align-items: center;
     justify-content: center;
     padding: 20px;
+    opacity: 0;
+    transition: opacity .2s ease;
 }
 
 .po.act {
     display: flex;
+    opacity: 1;
 }
 
 .poc {
@@ -1579,6 +1582,14 @@ body {
     box-shadow: 0 6px 24px rgba(0,0,0,.12);
     overflow: hidden;
     position: relative;
+    transform: scale(.92);
+    opacity: 0;
+    transition: transform .22s cubic-bezier(.2,.9,.3,1.2), opacity .2s ease;
+}
+
+.po.act .poc {
+    transform: scale(1);
+    opacity: 1;
 }
 
 .px {
