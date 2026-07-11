@@ -309,6 +309,8 @@
     var lO = document.getElementById('lO');
     var lX = document.getElementById('lX');
     var lI = document.getElementById('lI');
+    var pO = document.getElementById('pO');
+    var pB = document.getElementById('pB');
     var tT = document.getElementById('tT');
     var dataSources = {
         all: 'resources/json/post/sts2_mods/sts2_mods_1.json',
@@ -316,6 +318,7 @@
     };
     var dataCache = {};
     var currentMod = null;
+    var currentCl = null;
     var activePreviewTab = null;
     var FALLBACK_LOADED2 = 'https://cdn.jsdmirror.com/gh/eyteamd-max/HTML-full-linked-html-/loaded_2.gif';
     window.loaded2GifSrc = null;
@@ -429,9 +432,18 @@
         });
     }
 
+    function sGP(arr) {
+        var main = [], prereqs = [];
+        arr.forEach(function (l) {
+            if (l.text.includes('前置')) prereqs.push(l);
+            else main.push(l);
+        });
+        return { main: main, prereqs: prereqs };
+    }
+
     function cLL(ls) {
         var la = [], al = [], hi = [], tb = [];
-        if (!ls || !ls.length) return { latest: la, alternative: al, history: hi, testBranch: tb };
+        if (!ls || !ls.length) return { latest: { main: [], prereqs: [] }, alternative: al, history: { main: [], prereqs: [] }, testBranch: { main: [], prereqs: [] } };
         ls.forEach(function (l) {
             if (l.category) {
                 if (l.category === 'history') hi.push(l);
@@ -446,11 +458,7 @@
                 else la.push(l);
             }
         });
-        var sk = function (a) { return (a.text.includes('前置') || a.text.includes('解压密码')) ? 1 : 0; };
-        la.sort(function (a, b) { return sk(a) - sk(b); });
-        tb.sort(function (a, b) { return sk(a) - sk(b); });
-        hi.sort(function (a, b) { return sk(a) - sk(b); });
-        return { latest: la, alternative: al, history: hi, testBranch: tb };
+        return { latest: sGP(la), alternative: al, history: sGP(hi), testBranch: sGP(tb) };
     }
 
     function cOF(te, tg) {
@@ -980,7 +988,9 @@
 
     function oM(mod) {
         currentMod = mod;
-        var cl = cLL(mod.downloadLinks), h = '';
+        var cl = cLL(mod.downloadLinks);
+        currentCl = cl;
+        var h = '';
         var cs = gCS(mod);
         if (cs) h += '<div class="miw"><img class="mii" src="' + cs + '" alt="' + esc(mod.title) + '" onclick="window._oLB(this.src)" onerror="this.parentElement.style.display=\'none\'"></div>';
         h += '<h2 class="mit">' + esc(mod.title) + '</h2>';
@@ -1007,9 +1017,9 @@
         de = de.replace(/(https?:\/\/[^\s<"]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
         h += '<div class="mde"><div class="dt" id="dT">' + de + '</div><span class="dto" id="dO" style="display:none">展开全文</span></div>';
         h += '<div class="sl"><span>下载方式</span></div>';
-        h += '<div class="dsw ls"><div class="sh" onclick="window._tS(this)"><span class="st">正式版本<span class="sc">(' + cl.latest.length + ')</span></span><span class="sa2 op">▾</span></div><div class="sb"><div class="sbi">';
-        if (cl.latest.length) {
-            cl.latest.forEach(function (dl, i) {
+        h += '<div class="dsw ls"><div class="sh" onclick="window._tS(this)"><span class="st">正式版本<span class="sc">(' + cl.latest.main.length + ')</span></span><span class="sa2 op">▾</span></div><div class="sb"><div class="sbi">';
+        if (cl.latest.main.length) {
+            cl.latest.main.forEach(function (dl, i) {
                 h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
                 var dlMeta = gDLM(dl);
                 if (dlMeta) {
@@ -1019,15 +1029,20 @@
                 }
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="lD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="lD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
-                h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                var hasPr = cl.latest.prereqs && cl.latest.prereqs.length;
+                if (hasPr) {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window._oP(window._cPR(\'latest\'),\'' + dl.url + '\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                } else {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                }
             });
         } else {
             h += '<div class="eh">暂无直接下载链接</div>';
         }
         h += '</div></div></div>';
-        if (cl.testBranch.length) {
-            h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">测试分支版本<span class="sc">(' + cl.testBranch.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
-            cl.testBranch.forEach(function (dl, i) {
+        if (cl.testBranch.main.length) {
+            h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">测试分支版本<span class="sc">(' + cl.testBranch.main.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
+            cl.testBranch.main.forEach(function (dl, i) {
                 h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
                 var dlMeta = gDLM(dl);
                 if (dlMeta) {
@@ -1037,19 +1052,29 @@
                 }
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="tD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="tD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
-                h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                var hasPr = cl.testBranch.prereqs && cl.testBranch.prereqs.length;
+                if (hasPr) {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window._oP(window._cPR(\'testBranch\'),\'' + dl.url + '\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                } else {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                }
             });
             h += '</div></div></div>';
         }
         h += '<div class="sl"><span>更多</span></div>';
-        h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">历史版本<span class="sc">' + (cl.history.length ? '(' + cl.history.length + ')' : '') + '</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
-        if (cl.history.length) {
-            cl.history.forEach(function (dl, i) {
+        h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">历史版本<span class="sc">' + (cl.history.main.length ? '(' + cl.history.main.length + ')' : '') + '</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
+        if (cl.history.main.length) {
+            cl.history.main.forEach(function (dl, i) {
                 h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
                 h += gDLM(dl);
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="hD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="hD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
-                h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                var hasPr = cl.history.prereqs && cl.history.prereqs.length;
+                if (hasPr) {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window._oP(window._cPR(\'history\'),\'' + dl.url + '\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                } else {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
+                }
             });
         } else {
             h += '<div class="eh">暂无历史版本</div>';
@@ -1118,7 +1143,9 @@
         mO.classList.remove('act');
         document.body.style.overflow = '';
         currentMod = null;
+        currentCl = null;
         activePreviewTab = null;
+        window._cP();
     }
 
     mX.addEventListener('click', cM);
@@ -1129,6 +1156,37 @@
     window._oLB = oLB;
     window._cPT = copyText;
     window._sTM = showToast;
+
+    window._oP = function (prereqs, dlUrl) {
+        var h = '';
+        prereqs.forEach(function (p) {
+            h += '<div class="pbi"><div class="pbl"><div class="pbin">' + esc(p.text) + '</div>';
+            if (p.version || p.size || p.date) {
+                var meta = [];
+                if (p.version) meta.push(p.version);
+                if (p.size) meta.push(p.size);
+                if (p.date) meta.push(p.date);
+                h += '<div class="pbie">' + meta.map(function(x){return esc(x)}).join(' · ') + '</div>';
+            }
+            h += '</div><a class="pbil" href="#" onclick="event.preventDefault();window.open(\'' + p.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">前往</a></div>';
+        });
+        h += '<div class="pbi" style="border-top:1.5px solid var(--bd);padding-top:14px;margin-top:4px"><div class="pbl"><div class="pbin" style="font-weight:600">已确认前置齐备？</div><div class="pbie">点击下方按钮直接下载模组本体</div></div><a class="pbil" style="background:var(--sl);color:#fff;border-color:var(--sl)" href="#" onclick="event.preventDefault();window.open(\'' + dlUrl + '\',\'_blank\');window._cP()" target="_blank" rel="noopener noreferrer">下载</a></div>';
+        pB.innerHTML = h;
+        pO.classList.add('act');
+    };
+
+    window._cPR = function (cat) {
+        if (!currentCl || !currentCl[cat]) return [];
+        return currentCl[cat].prereqs || [];
+    };
+
+    window._cP = function () {
+        pO.classList.remove('act');
+    };
+
+    pO.addEventListener('click', function (e) {
+        if (e.target === pO) window._cP();
+    });
     window._tS = function (el) {
         var b = el.nextElementSibling, a = el.querySelector('.sa2'), c = b.classList.contains('co');
         if (c) {
