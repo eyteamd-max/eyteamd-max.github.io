@@ -1571,18 +1571,18 @@ body {
 }
 
 .poc {
-    background: #fffdfb;
-    border: 2px solid var(--bd);
+    background: var(--bg);
+    border: 1.5px dashed var(--bd);
     border-radius: 0;
     width: 100%;
-    max-width: 380px;
-    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    max-width: 360px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.1);
     overflow: hidden;
 }
 
 .ph {
-    padding: 14px 20px;
-    font-size: 1rem;
+    padding: 12px 18px;
+    font-size: .95rem;
     font-weight: 600;
     color: var(--tp);
     position: relative;
@@ -1591,15 +1591,16 @@ body {
 .ph::after {
     content: '';
     position: absolute;
-    left: 20px;
-    right: 20px;
+    left: 18px;
+    right: 18px;
     bottom: 0;
-    height: 2px;
-    background: var(--bd);
+    height: 1.5px;
+    background: transparent;
+    border-bottom: 1.5px dashed var(--bd);
 }
 
 .pb {
-    padding: 6px 20px 10px;
+    padding: 4px 18px 8px;
     max-height: 55vh;
     overflow-y: auto;
 }
@@ -1608,7 +1609,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 9px 0;
+    padding: 8px 0;
     border-bottom: none;
 }
 
@@ -1617,11 +1618,11 @@ body {
 }
 
 .pbi.pblb {
-    border-top: 2px solid var(--bd);
+    border-top: 1.5px dashed var(--bd);
     border-bottom: none;
-    padding-top: 12px;
-    padding-bottom: 2px;
-    margin-top: 4px;
+    padding-top: 10px;
+    padding-bottom: 0;
+    margin-top: 2px;
 }
 
 .pbin {
@@ -1638,33 +1639,34 @@ body {
 
 .pbil {
     font-size: .82rem;
-    color: var(--lk);
+    color: var(--mt);
     text-decoration: none;
     padding: 5px 14px;
-    border: 1.5px solid var(--bd);
-    border-radius: 7px;
-    background: #fff;
+    border: 1.5px dashed var(--bd);
+    border-radius: 0;
+    background: var(--sl-t);
     transition: all .2s;
     flex-shrink: 0;
     margin-left: 12px;
 }
 
 .pbil:hover {
-    background: var(--sl);
-    color: #fff;
-    border-color: var(--sl);
+    color: var(--tp);
+    border-color: var(--mt);
 }
 
 .pbil.pbdl {
-    background: var(--sl);
-    color: #fff;
-    border-color: var(--sl);
+    color: var(--tp);
+    border-color: var(--mt);
+    background: var(--sl-t);
     font-weight: 500;
-    padding: 6px 18px;
+    padding: 6px 16px;
 }
 
 .pbil.pbdl:hover {
-    filter: brightness(1.1);
+    background: var(--sl);
+    color: #fff;
+    border-color: var(--sl);
 }
 
 .pf {
@@ -2204,37 +2206,34 @@ body {
 }
 
 .dark .poc {
-    background: #2a2535;
-    border-color: #4a425c;
+    border-color: #5a526c;
 }
 
 .dark .ph::after {
-    background: #4a425c;
+    border-color: #5a526c;
 }
 
 .dark .pbi {
-    border-color: #4a425c;
+    border-color: #5a526c;
 }
 
 .dark .pbil {
-    background: #3a3449;
+    background: rgba(255,255,255,.04);
     border-color: #5a526c;
-    color: #b8b0c8;
+    color: #9a94a8;
 }
 
 .dark .pbil:hover {
-    background: #7c6f9c;
-    color: #fff;
-    border-color: #7c6f9c;
+    color: #c8c0d8;
+    border-color: #7a728c;
 }
 
-.dark .pbtn {
-    background: #3a3449;
-    border-color: #5a526c;
-    color: #b8b0c8;
+.dark .pbil.pbdl {
+    color: #c8c0d8;
+    border-color: #7a728c;
 }
 
-.dark .pbtn:hover {
+.dark .pbil.pbdl:hover {
     background: #7c6f9c;
     color: #fff;
     border-color: #7c6f9c;
