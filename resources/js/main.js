@@ -1172,6 +1172,7 @@
         });
         h += '<div class="pbi pblb"><div class="pbl"><div class="pbin" style="font-weight:600">已有前置？下载模组本体 →</div></div><a class="pbil pbdl" href="#" onclick="event.preventDefault();window.open(\'' + dlUrl + '\',\'_blank\');window._cP()" target="_blank" rel="noopener noreferrer">下载</a></div>';
         pB.innerHTML = h;
+        document.body.style.overflow = 'hidden';
         pO.classList.add('act');
     };
 
@@ -1182,6 +1183,9 @@
 
     window._cP = function () {
         pO.classList.remove('act');
+        setTimeout(function () {
+            document.body.style.overflow = '';
+        }, 200);
     };
 
     pO.addEventListener('click', function (e) {
