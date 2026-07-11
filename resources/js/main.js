@@ -1022,10 +1022,13 @@
             cl.latest.main.forEach(function (dl, i) {
                 h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
                 var dlMeta = gDLM(dl);
-                if (dlMeta) {
+                if (i === 0) {
+                    var v = dl.version || mod.badge;
+                    var s = dl.size || mod.size;
+                    var d = dl.date || mod.date;
+                    h += '<span class="dm">' + esc(v) + ' · ' + esc(s) + ' · ' + esc(d) + '</span>';
+                } else if (dlMeta) {
                     h += dlMeta;
-                } else if (i === 0) {
-                    h += '<span class="dm">' + esc(mod.badge) + ' · ' + esc(mod.size) + ' · ' + esc(mod.date) + '</span>';
                 }
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="lD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="lD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
@@ -1044,11 +1047,13 @@
             h += '<div class="dsw"><div class="sh" onclick="window._tS(this)"><span class="st">测试分支版本<span class="sc">(' + cl.testBranch.main.length + ')</span></span><span class="sa2">▾</span></div><div class="sb co"><div class="sbi">';
             cl.testBranch.main.forEach(function (dl, i) {
                 h += '<div class="di"><div class="dic"><div class="dih"><span class="dn"><a href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + esc(dl.text) + '</a></span>';
-                var dlMeta = gDLM(dl);
-                if (dlMeta) {
-                    h += dlMeta;
-                } else if (i === 0) {
-                    h += '<span class="dm">' + esc(mod.badge) + ' · ' + esc(mod.size) + ' · ' + esc(mod.date) + '</span>';
+                if (i === 0) {
+                    var v = dl.version || mod.badge;
+                    var s = dl.size || mod.size;
+                    var d = dl.date || mod.date;
+                    h += '<span class="dm">' + esc(v) + ' · ' + esc(s) + ' · ' + esc(d) + '</span>';
+                } else {
+                    h += gDLM(dl);
                 }
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="tD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="tD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
