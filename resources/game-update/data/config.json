@@ -1,0 +1,14 @@
+{
+  "launcherIcon": "https://cdn.example.com/launcher-icon.png",
+  "gameIcon": "https://cdn.example.com/game-icon.png",
+  "tutorialUrl": "https://b23.tv/RlzpOlN",
+  "githubApiUrl": "https://api.github.com/repos/ModinMobileSTS/Sts2MobileLauncher/releases/latest",
+  "githubParsingUrl": "https://axxxx.cyou/resources/github_parsing/?url=https://github.com/ModinMobileSTS/Sts2MobileLauncher",
+  "fallbackLatest": {
+    "version": "v0.1.6",
+    "date": "2026-07-11",
+    "size": "67.46MB",
+    "description": "- 新增《杀戮尖塔 2》v0.108.0 兼容包 - 新增通用离线启动层：没有完整兼容包匹配新游戏版本时，可在明确风险提示后作为最低优先级的尽力启动方案。 - 新增可选的游戏内快捷抽屉，提供实时日志、常用热设置、软键盘、存档快照、快速重开和返回附加设置；开发者模式新增 Runtime、Scene 与 Godot 对象嵌套检查器及临时 GDScript 结果查看。 - 重做 MOD 管理体验：支持虚拟化长列表、仅影响启动器显示的分组与拖拽、备注名、依赖/版本/文件问题探查、警告面板、目录跳转和一键修复加载顺序。 - 增强 Steam 创意工坊：支持分支与作者快照解析、自动分支推断、按 ID/URL 直接打开、后台下载、前置队列、下载与更新追踪、批量更新及 staging 自动清理。 - 现代化 Steam 中心UI，加入游戏下载/云存档/账号安全分区、内联下载速度与进度面板，并改进分支选择和云存档操作。 - 修复启动器系统栏与挖孔区域适配，加入高刷新率开关和 Android 游戏分类，并改进直装版升级时的内置本体刷新。 - 增强运行时稳定性，包括卡牌材质缓存保护、v0.108.0 启动顺序与 ModelDb 适配，以及 Workshop 生命周期和更新覆盖修复。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/dzw8s68207dafed594109bbb1abfead827ed5?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  }
+}
