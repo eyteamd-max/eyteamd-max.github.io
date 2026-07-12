@@ -1033,7 +1033,9 @@
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="lD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="lD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
                 var hasPr = cl.latest.prereqs && cl.latest.prereqs.length;
-                if (hasPr) {
+                if (dl.type === 'password') {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '前往</a></div>';
+                } else if (hasPr) {
                     h += '</div><a class="db" href="#" onclick="event.preventDefault();window._oP(window._cPR(\'latest\'),\'' + dl.url + '\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
                 } else {
                     h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
@@ -1058,7 +1060,9 @@
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="tD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="tD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
                 var hasPr = cl.testBranch.prereqs && cl.testBranch.prereqs.length;
-                if (hasPr) {
+                if (dl.type === 'password') {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '前往</a></div>';
+                } else if (hasPr) {
                     h += '</div><a class="db" href="#" onclick="event.preventDefault();window._oP(window._cPR(\'testBranch\'),\'' + dl.url + '\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
                 } else {
                     h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
@@ -1075,7 +1079,9 @@
                 h += '</div>';
                 if (dl.desc) h += '<div class="id" id="hD' + i + '">' + esc(dl.desc) + '</div><span class="idt" data-target="hD' + i + '" onclick="window._tID(this)" style="display:none">展开</span>';
                 var hasPr = cl.history.prereqs && cl.history.prereqs.length;
-                if (hasPr) {
+                if (dl.type === 'password') {
+                    h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '前往</a></div>';
+                } else if (hasPr) {
                     h += '</div><a class="db" href="#" onclick="event.preventDefault();window._oP(window._cPR(\'history\'),\'' + dl.url + '\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
                 } else {
                     h += '</div><a class="db" href="#" onclick="event.preventDefault();window.open(\'' + dl.url + '\',\'_blank\')" target="_blank" rel="noopener noreferrer">' + dlS + '下载</a></div>';
