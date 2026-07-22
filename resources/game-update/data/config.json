@@ -1,0 +1,14 @@
+{
+  "launcherIcon": "https://cdn.example.com/launcher-icon.png",
+  "gameIcon": "https://cdn.example.com/game-icon.png",
+  "tutorialUrl": "https://www.bilibili.com/video/BV1FuKq6WEF2",
+  "githubApiUrl": "https://api.github.com/repos/ModinMobileSTS/Sts2MobileLauncher/releases/latest",
+  "githubParsingUrl": "https://axxxx.cyou/resources/github_parsing/?url=https://github.com/ModinMobileSTS/Sts2MobileLauncher",
+  "fallbackLatest": {
+    "version": "v0.1.7",
+    "date": "2026-07-18",
+    "size": "68.01MB",
+    "description": "- v0.109.0 兼容 - 重做 Steam 登录恢复流程：手机确认开始后即可切到 Steam App，前台认证服务会继续轮询并在连接中断、Activity 重建或可恢复的进程重启后恢复短期事务，不再依赖小窗或额外的“已批准”按钮；密码与本次 Guard 动态码仍只驻留内存。 - 加速并增强 Steam 游戏本体下载：支持 1/2/4 个 chunk worker、受内存预算约束的并发流水线、已校验 chunk 断点续传、稳定任务目录、代理到源站回退、auth token 刷新以及向下取消当前网络请求。 - 修复多次前后台与焦点切换后触屏或蓝牙鼠标可能无法点击的问题，并重构高刷新率请求为绑定 Activity generation 与 Surface epoch 的单次投票和有界验证。 - 恢复游戏内动态渲染分辨率切换；渲染目标与逻辑 UI/输入坐标分离，切换分辨率、恢复 Auto、前后台和窗口变化时均会幂等重投，不再通过 Android Surface 重建改变触控映射。 - 改进资源生命周期：缓存淘汰时不再显式释放仍被节点、对象池或异步任务持有的 Godot Resource，同时保持原有预加载范围、时机、学习资源上限与 warm cache 保护。 - 本地 LAN 联机改回使用当前游戏版本原版消息类型排序、ID 与反序列化协议，以修复 PC 原版与 Android 之间的大厅和 heartbeat 协议不一致；参与联机的 Android 设备应一起升级。 - 修复 schema 2 family 兼容包在相同大小 DLL 的目标间切换时可能继续复用旧 DLL 的问题；启动准备现在按实际内容比较、复制后复核，并把已安装包 SHA 纳入缓存 stamp。",
+    "downloadUrl": "https://files.zohopublic.com.cn/public/workdrive-public/download/dzw8s6ccd2e7ba3314096821ffc8257be9c85?x-cli-msg=%7B%22isFileOwner%22%3Afalse%2C%22version%22%3A%221.0%22%2C%22isWDSupport%22%3Afalse%7D"
+  }
+}
