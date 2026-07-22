@@ -1,0 +1,35 @@
+name = "sts2-comments"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ============= 绑定资源（部署前需通过 wrangler 创建） =============
+# D1 数据库
+[[d1_databases]]
+binding = "DB"
+database_name = "sts2_comments"
+database_id = "REPLACE_WITH_REAL_D1_ID"   # 替换为你的 D1 database ID
+
+# R2 存储（头像 / 评论附件）
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "sts2-comments"
+
+# ============= 环境变量（通过 wrangler secret put 设置） =============
+# JWT 签名密钥（必填）
+#   npx wrangler secret put JWT_SECRET
+#
+# 邮件服务（任选其一）
+#   npx wrangler secret put RESEND_API_KEY
+#   或  SMTP 凭据 / 其它 API
+#
+# 站点对外域名（用于拼接邮件验证链接）
+[vars]
+SITE_ORIGIN  = "https://axxxx.cyou"
+EMAIL_FROM   = "no-reply@axxxx.cyou"
+# R2 公共访问域名（可绑定自定义 CDN 域名；留空则通过 /api/files/* 代理读取）
+R2_PUBLIC_URL = ""
+
+# 管理员邮箱（第一个注册的邮箱将自动获得管理员身份；亦可后续手工 UPDATE）
+[observability]
+enabled = true

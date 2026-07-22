@@ -1,0 +1,17 @@
+{
+  "name": "sts2-comments-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "STS2 娘化MOD站 评论系统后端 - Cloudflare Workers + D1 + R2",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute sts2_comments --file=./schema.sql --remote",
+    "db:init:local": "wrangler d1 execute sts2_comments --file=./schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

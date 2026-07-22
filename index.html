@@ -52,6 +52,7 @@
     }
   </style>
   <link rel="stylesheet" href="resources/css/style.css?v=20260625f">
+  <link rel="stylesheet" href="resources/comments/comments.css">
 </head>
 <body>
   <div class="loading-overlay" id="loadingOverlay">
@@ -137,5 +138,10 @@
   </a>
 
   <script src="resources/js/main.js?v=20260625f" defer></script>
+  <script>
+    // 后端地址：若 Worker 部署在独立域名，请改为完整 URL，例如
+    //   window.COMMENT_API_BASE = 'https://comments.axxxx.cyou/api';
+  </script>
+  <script src="resources/comments/comments.js" defer></script>
 </body>
 </html>
